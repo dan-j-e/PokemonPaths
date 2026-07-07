@@ -44,6 +44,31 @@ Everywhere else in the outline already satisfied the rule (runs of 1-2) and is u
 
 Battle rosters for every trainer are in `game/src/data/trainers.ts`.
 
+## Battle & Catch System
+
+Modeled on **zeroxm/pokemon-roulette** (github.com/zeroxm/pokemon-roulette) — a weighted-wheel spin where team power and type advantage shift the odds without guaranteeing the outcome. No stats or movesets.
+
+**Species data** (`game/src/data/species.ts`): every species has real type(s) (well-known Pokemon facts) and either a Bulbapedia catch rate (wild-encounterable species) or a manually-assigned `power` (trainer-only species that are never wild-caught, e.g. gym/Elite Four/Champion mons — judgment call, not Bulbapedia-sourced).
+
+**Power**: wild species derive `power` (1-8) from their catch rate — rarer/harder to catch → higher power, mirroring zeroxm's own power range. Trainer-only species get power hand-assigned by evolutionary stage/battle-tier.
+
+**Type effectiveness** (`game/src/data/typeChart.ts`): standard Gen 4 17-type chart (no Fairy — doesn't exist yet). A Pokemon's own type(s) double as its offense (no separate moves). Dual types multiply defensively as normal.
+
+**Wild encounters & catching** (`game/src/data/encounters.ts`): each non-battle segment has a weighted species table simplified from Bulbapedia's Diamond/Pearl encounter data. Simplifications made deliberately:
+- Only base grass/cave land encounters — dropped surf, fishing rods, swarms, Poke Radar, dual-slot, and time-of-day/Diamond-vs-Pearl version splits (none of that is modeled in this game).
+- Multi-location merged segments (Mt. Coronet Crossing, Hearthome Outskirts) pool their constituent locations' tables.
+- For routes with Bulbapedia North/South sub-areas, only one representative sub-area's table was used rather than blending both.
+- A few species that turned up in encounter research but weren't in the original catch-rate research pass got catch rates filled from general Pokemon knowledge instead of a second research call (noted here, not hidden).
+- Catching: land on a wild encounter, the game rolls a species from the table, then rolls a catch attempt at `catchRate / 255` (clamped 10%-95%) — a simplified stand-in for the real HP/ball-based Gen IV formula, which needs mechanics (HP, Poke Balls) this game doesn't have. Success adds the species to the active team (max 6) or the bench; failure has no penalty (per the user: revisit later if that should change).
+
+**Battles** (`game/src/battle/roulette.ts`, `TeamManagementScene`, `BattleScene`): before every battle, `TeamManagementScene` shows the player's active team and bench alongside the opponent's roster, and lets the player reorder the active lineup or swap in bench Pokemon. `BattleScene` then computes a lead-vs-lead type matchup tier (overwhelming/advantage/neutral/disadvantage/overwhelmed), builds win/lose weights (`1 + total active team power + type bonus` vs. `1 + battle tier weight×2 + type penalty`), shows a win%/lose% bar, and a "Spin" button resolves the outcome. The existing run-ending rule (gym/Elite Four/Champion loss ends the run; everything else has no penalty) still applies on a loss.
+
+## Visuals
+
+- **Pokemon sprites**: loaded at runtime from PokeAPI's public sprite CDN (`raw.githubusercontent.com/PokeAPI/sprites`) by National Dex number — the same source zeroxm/pokemon-roulette uses. Small `icon` variant for battle/team/action screens, larger `official-artwork` variant for starter selection. See `game/src/data/sprites.ts`.
+- **Trainer sprites**: skipped — no equivalent clean free source. Trainers stay text-only.
+- **Location themes** (`game/src/data/locationThemes.ts`): each segment gets a dark background color matching its real personality (e.g. Hearthome purple like Fantina, Jubilife beige/silver as the media city, Snowpoint icy blue, Victory Road dramatic red). Not a walkable tile map — still card-based screens, just themed.
+
 ## Meta-Progression
 
 None in Phase 1. Every run starts from a blank slate. Persistent unlocks (currency, starter unlocks, permanent upgrades) are explicitly deferred until after the base game exists.
@@ -52,15 +77,19 @@ None in Phase 1. Every run starts from a blank slate. Persistent unlocks (curren
 
 - Region randomization or player-selectable region.
 - Meta-progression systems between runs.
+- A full walkable tile-based overworld with a region minimap showing player position (explicitly deferred — to be considered once more of the map/UI exists).
 
 ## Open Questions
 
-- Sprite/tile art source: custom pixel art vs. placeholder vs. other. Not blocking the current skeleton.
-- Battle system depth: how close to mainline turn-based mechanics (stats, types, moves) should Phase 1 go? Currently a Win/Lose stub in `BattleScene`.
-- Catch/shop/item systems are currently flavor-text stubs in `ActionScene` — real mechanics not designed yet.
+- Shop/heal/item/lore actions are still flavor-text stubs in `ActionScene` — only catching is a real mechanic so far.
 - Whether losing a route/rival/commander battle should carry any minor consequence later (currently: none).
+- Whether fainted/lost Pokemon should ever leave the team (currently: team composition never shrinks; only run-ending losses matter).
+- Region minimap showing player position — deferred, to consider once more of the map/UI exists.
 
 ## Changelog
 
 - 2026-07-07: Initial kickoff session. Established tech stack, IP approach, Phase 1 region (Sinnoh), run structure, loss rules, and deferred meta-progression/repo setup. Scaffolded TypeScript+Phaser+Vite skeleton in `game/`.
 - 2026-07-07: Built the full Sinnoh story progression as a playable click-through prototype. Encoded the finalized (post-reduction) segment list and trainer rosters as data, and implemented starter select, overworld, action, battle, game-over, and victory scenes in Phaser. Confirmed starter selection is player-chosen, not random (supersedes the kickoff session's "random starter" note).
+- 2026-07-07: Connected the project to a local git repository (no remote).
+- 2026-07-07: Replaced the battle Win/Lose stub with a real roulette mechanic (modeled on zeroxm/pokemon-roulette) and made catching real, grounded in Bulbapedia encounter/catch-rate data with documented simplifications. Added `TeamManagementScene` for pre-battle team reordering and bench swaps.
+- 2026-07-07: Added real Pokemon sprites (PokeAPI CDN) to starter select, battles, and team management, plus dark per-location background themes matching each city's real personality.

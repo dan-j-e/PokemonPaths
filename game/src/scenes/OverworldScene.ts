@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { SEGMENTS } from '../data/segments';
+import { themeFor } from '../data/locationThemes';
 import { createButton } from '../ui/button';
 import type { RunState } from '../data/types';
 
@@ -21,6 +22,7 @@ export class OverworldScene extends Phaser.Scene {
     }
 
     const segment = SEGMENTS[this.runState.segmentIndex];
+    this.cameras.main.setBackgroundColor(themeFor(segment.id));
 
     this.add
       .text(400, 200, segment.name, {
@@ -34,7 +36,7 @@ export class OverworldScene extends Phaser.Scene {
 
     createButton(this, 400, 350, 'Continue', () => {
       if (segment.kind === 'battle') {
-        this.scene.start('battle', { ...this.runState, battleSubIndex: 0 });
+        this.scene.start('team-management', { ...this.runState, battleSubIndex: 0 });
       } else {
         this.scene.start('action', this.runState);
       }
