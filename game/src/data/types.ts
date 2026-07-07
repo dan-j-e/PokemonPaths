@@ -1,6 +1,6 @@
 import type { ItemType } from './items';
 
-export type ActionType = 'heal' | 'catch' | 'item' | 'lore';
+export type ActionType = 'heal' | 'catch' | 'item' | 'interact';
 
 export interface BattleSpec {
   trainer: string;
@@ -16,10 +16,14 @@ export interface Segment {
   kind: 'battle' | 'non-battle';
   battles?: BattleSpec[];
   actionPool?: ActionType[];
+  /** True for the 8 gym battle segments — used by the progress bar to count badges earned. */
+  isGym?: boolean;
 }
 
 export interface TeamMember {
   species: string;
+  /** Wins as active lead, toward EVOLUTION_WIN_THRESHOLD. Fractional when boosted by EXP Share. */
+  wins?: number;
 }
 
 export interface RunState {
@@ -33,4 +37,8 @@ export interface RunState {
   pendingBoost: number;
   /** Set after a Potion retry: the lead species that must NOT still be leading when continuing. */
   mustChangeLeadFrom?: string;
+  /** A one-off route encounter battle, not part of any segment's static battle list. */
+  adHocBattle?: BattleSpec;
+  /** Permanent once found: every win also gives non-lead active team members partial win progress. */
+  hasExpShare: boolean;
 }

@@ -4,13 +4,6 @@ import type { BattleSpec } from './types';
 
 export const BARRY_1: BattleSpec = { trainer: 'Barry', roster: ['Starly'], runEnding: false, tier: 1 };
 
-export const GALACTIC_GRUNT_JUBILIFE: BattleSpec = {
-  trainer: 'Team Galactic Grunt',
-  roster: ['Wurmple', 'Zubat'],
-  runEnding: false,
-  tier: 1,
-};
-
 export const GYM_ROARK: BattleSpec = {
   trainer: 'Roark (Gym Leader)',
   roster: ['Geodude', 'Onix', 'Cranidos'],
@@ -18,12 +11,6 @@ export const GYM_ROARK: BattleSpec = {
   tier: 3,
 };
 
-export const MARS_1: BattleSpec = {
-  trainer: 'Commander Mars',
-  roster: ['Zubat', 'Purugly'],
-  runEnding: false,
-  tier: 2,
-};
 export const MARS_2: BattleSpec = {
   trainer: 'Commander Mars',
   roster: ['Zubat', 'Purugly'],
@@ -59,13 +46,6 @@ export const GYM_CRASHER_WAKE: BattleSpec = {
   tier: 3,
 };
 
-export const GALACTIC_GRUNT_CELESTIC: BattleSpec = {
-  trainer: 'Team Galactic Grunt',
-  roster: ['Golbat', 'Houndour', 'Croagunk'],
-  runEnding: false,
-  tier: 1,
-};
-
 export const GYM_FANTINA: BattleSpec = {
   trainer: 'Fantina (Gym Leader)',
   roster: ['Drifblim', 'Gengar', 'Mismagius'],
@@ -80,19 +60,6 @@ export const GYM_BYRON: BattleSpec = {
   tier: 3,
 };
 
-export const SATURN_1: BattleSpec = {
-  trainer: 'Commander Saturn',
-  roster: ['Golbat', 'Toxicroak'],
-  runEnding: false,
-  tier: 2,
-};
-export const MARS_3: BattleSpec = {
-  trainer: 'Commander Mars',
-  roster: ['Golbat', 'Purugly'],
-  runEnding: false,
-  tier: 2,
-};
-
 export const GYM_CANDICE: BattleSpec = {
   trainer: 'Candice (Gym Leader)',
   roster: ['Sneasel', 'Piloswine', 'Medicham', 'Abomasnow'],
@@ -100,18 +67,6 @@ export const GYM_CANDICE: BattleSpec = {
   tier: 3,
 };
 
-export const SATURN_2: BattleSpec = {
-  trainer: 'Commander Saturn',
-  roster: ['Golbat', 'Bronzor', 'Toxicroak'],
-  runEnding: false,
-  tier: 2,
-};
-export const JUPITER_2: BattleSpec = {
-  trainer: 'Commander Jupiter',
-  roster: ['Golbat', 'Bronzor', 'Skuntank'],
-  runEnding: false,
-  tier: 2,
-};
 export const CYRUS_1: BattleSpec = {
   trainer: 'Cyrus',
   roster: ['Murkrow', 'Sneasel', 'Golbat'],

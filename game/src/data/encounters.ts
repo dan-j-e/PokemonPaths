@@ -6,32 +6,20 @@ export interface EncounterEntry {
 // Simplified from Bulbapedia Diamond/Pearl encounter tables: grass/cave land encounters only
 // (surf, fishing rods, swarms, Poke Radar, dual-slot, and time-of-day/version splits dropped —
 // see GDD "Battle & Catch System" for the full simplification rationale). Weights are relative,
-// not literal percentages, and multi-location merged segments pool their constituent locations'
-// tables together.
+// not literal percentages. Segment ids here reflect the trimmed-run merges (each combines the
+// pooled tables of the original individual locations it replaced — weights summed where a
+// species appeared in more than one of them).
 export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
-  'route-201': [
-    { species: 'Starly', weight: 47 },
-    { species: 'Bidoof', weight: 53 },
-  ],
-  'route-202': [
-    { species: 'Starly', weight: 33 },
-    { species: 'Bidoof', weight: 30 },
-    { species: 'Kricketot', weight: 10 },
-    { species: 'Shinx', weight: 30 },
-  ],
-  'route-203': [
-    { species: 'Zubat', weight: 10 },
+  'route-201-to-oreburgh-gate': [
+    { species: 'Starly', weight: 115 },
+    { species: 'Bidoof', weight: 98 },
+    { species: 'Kricketot', weight: 20 },
+    { species: 'Shinx', weight: 55 },
+    { species: 'Zubat', weight: 30 },
     { species: 'Abra', weight: 15 },
-    { species: 'Starly', weight: 35 },
-    { species: 'Bidoof', weight: 15 },
-    { species: 'Kricketot', weight: 10 },
-    { species: 'Shinx', weight: 25 },
-  ],
-  'oreburgh-gate': [
-    { species: 'Zubat', weight: 20 },
     { species: 'Geodude', weight: 80 },
   ],
-  'route-204': [
+  'route-204-floaroma': [
     { species: 'Zubat', weight: 10 },
     { species: 'Starly', weight: 30 },
     { species: 'Bidoof', weight: 25 },
@@ -39,23 +27,21 @@ export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
     { species: 'Shinx', weight: 15 },
     { species: 'Budew', weight: 20 },
   ],
-  'route-205': [
+  'route-205-eterna-forest': [
     { species: 'Bidoof', weight: 10 },
     { species: 'Pachirisu', weight: 10 },
     { species: 'Buizel', weight: 35 },
     { species: 'Shellos', weight: 45 },
-  ],
-  'eterna-forest': [
     { species: 'Wurmple', weight: 25 },
     { species: 'Budew', weight: 25 },
     { species: 'Buneary', weight: 19 },
   ],
-  'mt-coronet-crossing': [
-    { species: 'Zubat', weight: 55 },
-    { species: 'Geodude', weight: 97 },
-    { species: 'Ponyta', weight: 35 },
+  'coronet-to-hearthome': [
+    { species: 'Zubat', weight: 65 },
+    { species: 'Geodude', weight: 157 },
+    { species: 'Ponyta', weight: 100 },
     { species: 'Kricketot', weight: 20 },
-    { species: 'Kricketune', weight: 10 },
+    { species: 'Kricketune', weight: 37 },
     { species: 'Stunky', weight: 25 },
     { species: 'Bronzor', weight: 10 },
     { species: 'Machop', weight: 72 },
@@ -64,9 +50,6 @@ export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
     { species: 'Chingling', weight: 10 },
     { species: 'Psyduck', weight: 30 },
     { species: 'Bidoof', weight: 20 },
-  ],
-  'hearthome-outskirts': [
-    { species: 'Zubat', weight: 10 },
     { species: 'Gastly', weight: 10 },
     { species: 'Chansey', weight: 10 },
     { species: 'Starly', weight: 20 },
@@ -74,20 +57,15 @@ export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
     { species: 'Bibarel', weight: 38 },
     { species: 'Bonsly', weight: 8 },
     { species: 'Mr. Mime', weight: 8 },
-    { species: 'Geodude', weight: 60 },
-    { species: 'Ponyta', weight: 65 },
-    { species: 'Kricketune', weight: 27 },
     { species: 'Abra', weight: 10 },
     { species: 'Kadabra', weight: 15 },
   ],
-  'route-214': [
+  'route-213-214': [
     { species: 'Geodude', weight: 20 },
     { species: 'Ponyta', weight: 30 },
     { species: 'Girafarig', weight: 10 },
     { species: 'Kricketune', weight: 15 },
     { species: 'Stunky', weight: 15 },
-  ],
-  'route-213': [
     { species: 'Wingull', weight: 15 },
     { species: 'Buizel', weight: 30 },
     { species: 'Floatzel', weight: 10 },
@@ -109,24 +87,20 @@ export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
     { species: 'Shellos', weight: 20 },
     { species: 'Gastrodon', weight: 20 },
   ],
-  'mt-coronet-2': [
-    { species: 'Zubat', weight: 15 },
+  'coronet-to-snowpoint': [
+    { species: 'Zubat', weight: 35 },
     { species: 'Machop', weight: 25 },
     { species: 'Geodude', weight: 20 },
     { species: 'Cleffa', weight: 12 },
-    { species: 'Meditite', weight: 10 },
+    { species: 'Meditite', weight: 30 },
     { species: 'Chingling', weight: 10 },
-  ],
-  'routes-216-217': [
-    { species: 'Zubat', weight: 20 },
     { species: 'Machoke', weight: 40 },
     { species: 'Graveler', weight: 10 },
     { species: 'Noctowl', weight: 20 },
     { species: 'Sneasel', weight: 50 },
-    { species: 'Meditite', weight: 20 },
     { species: 'Snover', weight: 50 },
   ],
-  'mt-coronet-3': [
+  'mt-coronet-pre-spear-pillar': [
     { species: 'Zubat', weight: 15 },
     { species: 'Machop', weight: 25 },
     { species: 'Geodude', weight: 20 },
@@ -134,12 +108,10 @@ export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
     { species: 'Meditite', weight: 10 },
     { species: 'Chingling', weight: 10 },
   ],
-  'route-223': [
+  'route-223-victory-road': [
     { species: 'Tentacruel', weight: 60 },
     { species: 'Pelipper', weight: 30 },
     { species: 'Mantyke', weight: 10 },
-  ],
-  'victory-road': [
     { species: 'Golbat', weight: 60 },
     { species: 'Machoke', weight: 50 },
     { species: 'Graveler', weight: 40 },

@@ -36,6 +36,7 @@ export class StarterSelectScene extends Phaser.Scene {
             bench: [],
             items: emptyInventory(),
             pendingBoost: 0,
+            hasExpShare: false,
           });
         });
       });

@@ -115,6 +115,21 @@ export const SPECIES: Record<string, SpeciesData> = {
   Milotic: { type1: 'water', dexNumber: 350, power: 6 },
   Garchomp: { type1: 'dragon', type2: 'ground', dexNumber: 445, power: 8 },
   Cherubi: { type1: 'grass', dexNumber: 420, power: 2 },
+
+  // Evolution-only stages (reached via win-count evolution, never wild/trainer-rostered directly)
+  Grotle: { type1: 'grass', dexNumber: 388, power: 5 },
+  Torterra: { type1: 'grass', type2: 'ground', dexNumber: 389, power: 7 },
+  Monferno: { type1: 'fire', type2: 'fighting', dexNumber: 391, power: 5 },
+  Prinplup: { type1: 'water', dexNumber: 394, power: 5 },
+  Empoleon: { type1: 'water', type2: 'steel', dexNumber: 395, power: 7 },
+  Luxio: { type1: 'electric', dexNumber: 404, power: 4 },
+  Roselia: { type1: 'grass', type2: 'poison', dexNumber: 315, power: 4 },
+  Machamp: { type1: 'fighting', dexNumber: 68, power: 7 },
+  Haunter: { type1: 'ghost', type2: 'poison', dexNumber: 93, power: 5 },
+  Chimecho: { type1: 'psychic', dexNumber: 358, power: 4 },
+  Staraptor: { type1: 'normal', type2: 'flying', dexNumber: 398, power: 7 },
+  Silcoon: { type1: 'bug', dexNumber: 266, power: 2 },
+  Cascoon: { type1: 'bug', dexNumber: 268, power: 2 },
 };
 
 export function getSpecies(name: string): SpeciesData {

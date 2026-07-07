@@ -3,13 +3,24 @@ import { SEGMENTS } from '../data/segments';
 import { getSpecies } from '../data/species';
 import { createButton } from '../ui/button';
 import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
-import type { RunState } from '../data/types';
+import { drawProgressBar } from '../ui/progressBar';
+import { EVOLUTIONS, EVOLUTION_WIN_THRESHOLD } from '../data/evolutions';
+import type { RunState, TeamMember } from '../data/types';
 
 const ICON_SIZE = 28;
 
 function describe(species: string): string {
   const s = getSpecies(species);
   return `${species} (${s.type1}${s.type2 ? '/' + s.type2 : ''})`;
+}
+
+function describeMember(member: TeamMember): string {
+  const base = describe(member.species);
+  const wins = member.wins ?? 0;
+  if (wins > 0 && EVOLUTIONS[member.species]) {
+    return `${base} — ${wins}/${EVOLUTION_WIN_THRESHOLD} wins`;
+  }
+  return base;
 }
 
 export class TeamManagementScene extends Phaser.Scene {
@@ -26,7 +37,10 @@ export class TeamManagementScene extends Phaser.Scene {
 
   create() {
     const segment = SEGMENTS[this.runState.segmentIndex];
-    const battle = (segment.battles ?? [])[this.runState.battleSubIndex ?? 0];
+    const battle = this.runState.adHocBattle ?? (segment.battles ?? [])[this.runState.battleSubIndex ?? 0];
+    const locationLabel = this.runState.adHocBattle ? 'Trainer Encounter' : segment.name;
+
+    drawProgressBar(this, this.runState.segmentIndex);
 
     const allSpecies = [
       ...this.runState.team.map((m) => m.species),
@@ -36,7 +50,7 @@ export class TeamManagementScene extends Phaser.Scene {
 
     ensureSpeciesSprites(this, allSpecies, () => {
       this.add
-        .text(400, 25, `${segment.name}\nvs. ${battle.trainer}`, {
+        .text(400, 25, `${locationLabel}\nvs. ${battle.trainer}`, {
           fontFamily: 'monospace',
           fontSize: '18px',
           color: '#ffffff',
@@ -106,7 +120,7 @@ export class TeamManagementScene extends Phaser.Scene {
     this.runState.team.forEach((member, i) => {
       const y = 110 + i * 34;
       const icon = this.add.image(50, y + 10, spriteKey(member.species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
-      const row = this.add.text(70, y, `${i + 1}. ${describe(member.species)}`, {
+      const row = this.add.text(70, y, `${i + 1}. ${describeMember(member)}`, {
         fontFamily: 'monospace',
         fontSize: '14px',
         color: '#ffffff',
@@ -136,7 +150,7 @@ export class TeamManagementScene extends Phaser.Scene {
     this.runState.bench.forEach((member, i) => {
       const y = benchY + 30 + i * 34;
       const icon = this.add.image(50, y + 10, spriteKey(member.species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
-      const row = this.add.text(70, y, describe(member.species), {
+      const row = this.add.text(70, y, describeMember(member), {
         fontFamily: 'monospace',
         fontSize: '14px',
         color: '#cccccc',

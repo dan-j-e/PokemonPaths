@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { SEGMENTS } from '../data/segments';
 import { themeFor } from '../data/locationThemes';
 import { createButton } from '../ui/button';
+import { drawProgressBar } from '../ui/progressBar';
 import type { RunState } from '../data/types';
 
 export class OverworldScene extends Phaser.Scene {
@@ -23,6 +24,7 @@ export class OverworldScene extends Phaser.Scene {
 
     const segment = SEGMENTS[this.runState.segmentIndex];
     this.cameras.main.setBackgroundColor(themeFor(segment.id));
+    drawProgressBar(this, this.runState.segmentIndex);
 
     this.add
       .text(400, 200, segment.name, {

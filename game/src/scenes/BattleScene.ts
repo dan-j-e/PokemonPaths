@@ -4,6 +4,9 @@ import { computeBattleOdds, spinBattle } from '../battle/roulette';
 import { createButton } from '../ui/button';
 import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
 import { themeFor } from '../data/locationThemes';
+import { drawProgressBar } from '../ui/progressBar';
+import { applyBattleWin, applyEvolution } from '../data/evolutions';
+import type { EvolutionOffer } from '../data/evolutions';
 import type { RunState } from '../data/types';
 
 export class BattleScene extends Phaser.Scene {
@@ -21,9 +24,11 @@ export class BattleScene extends Phaser.Scene {
     const segment = SEGMENTS[this.runState.segmentIndex];
     const battles = segment.battles ?? [];
     const subIndex = this.runState.battleSubIndex ?? 0;
-    const battle = battles[subIndex];
+    const battle = this.runState.adHocBattle ?? battles[subIndex];
+    const locationLabel = this.runState.adHocBattle ? 'Trainer Encounter' : segment.name;
 
     this.cameras.main.setBackgroundColor(themeFor(segment.id));
+    drawProgressBar(this, this.runState.segmentIndex);
 
     const playerLead = this.runState.team[0].species;
     const opponentLead = battle.roster[0];
@@ -36,7 +41,7 @@ export class BattleScene extends Phaser.Scene {
       this.add.image(580, 130, spriteKey(opponentLead)).setDisplaySize(96, 96);
 
       this.add
-        .text(400, 90, `${segment.name}\nvs. ${battle.trainer}`, {
+        .text(400, 90, `${locationLabel}\nvs. ${battle.trainer}`, {
           fontFamily: 'monospace',
           fontSize: '22px',
           color: '#ffffff',
@@ -90,7 +95,14 @@ export class BattleScene extends Phaser.Scene {
         .setOrigin(0.5);
 
       const advanceToNext = () => {
-        if (subIndex + 1 < battles.length) {
+        if (stateAfterBoost.adHocBattle) {
+          this.scene.start('overworld', {
+            ...stateAfterBoost,
+            segmentIndex: this.runState.segmentIndex + 1,
+            battleSubIndex: undefined,
+            adHocBattle: undefined,
+          });
+        } else if (subIndex + 1 < battles.length) {
           this.scene.start('team-management', { ...stateAfterBoost, battleSubIndex: subIndex + 1 });
         } else {
           this.scene.start('overworld', {
@@ -126,13 +138,44 @@ export class BattleScene extends Phaser.Scene {
         });
       };
 
+      const showEvolvePrompt = (offer: EvolutionOffer) => {
+        const promptText = this.add
+          .text(400, 470, `${offer.from} wants to evolve into ${offer.to}!`, {
+            fontFamily: 'monospace',
+            fontSize: '16px',
+            color: '#88ffcc',
+            align: 'center',
+            wordWrap: { width: 700 },
+          })
+          .setOrigin(0.5);
+
+        const yesBtn = createButton(this, 320, 500, 'Yes', () => {
+          yesBtn.disableInteractive();
+          noBtn.disableInteractive();
+          stateAfterBoost.team = applyEvolution(stateAfterBoost.team, offer.memberIndex, offer.to);
+          promptText.setText(`${offer.from} evolved into ${offer.to}!`);
+          createButton(this, 400, 540, 'Continue', advanceToNext);
+        });
+        const noBtn = createButton(this, 480, 500, 'No', () => {
+          yesBtn.disableInteractive();
+          noBtn.disableInteractive();
+          createButton(this, 400, 540, 'Continue', advanceToNext);
+        });
+      };
+
       const spinBtn = createButton(this, 400, 440, 'Spin', () => {
         spinBtn.disableInteractive();
         const won = spinBattle(odds);
 
         if (won) {
           resultText.setText('You won!');
-          createButton(this, 400, 500, 'Continue', advanceToNext);
+          const result = applyBattleWin(stateAfterBoost);
+          stateAfterBoost.team = result.team;
+          if (result.evolutionOffer) {
+            showEvolvePrompt(result.evolutionOffer);
+          } else {
+            createButton(this, 400, 500, 'Continue', advanceToNext);
+          }
         } else if (battle.runEnding) {
           showLossOptions();
         } else {
