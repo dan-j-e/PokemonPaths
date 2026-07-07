@@ -61,11 +61,20 @@ Modeled on **zeroxm/pokemon-roulette** (github.com/zeroxm/pokemon-roulette) — 
 - A few species that turned up in encounter research but weren't in the original catch-rate research pass got catch rates filled from general Pokemon knowledge instead of a second research call (noted here, not hidden).
 - Catching: land on a wild encounter, the game rolls a species from the table, then rolls a catch attempt at `catchRate / 255` (clamped 10%-95%) — a simplified stand-in for the real HP/ball-based Gen IV formula, which needs mechanics (HP, Poke Balls) this game doesn't have. Success adds the species to the active team (max 6) or the bench; failure has no penalty (per the user: revisit later if that should change).
 
-**Battles** (`game/src/battle/roulette.ts`, `TeamManagementScene`, `BattleScene`): before every battle, `TeamManagementScene` shows the player's active team and bench alongside the opponent's roster, and lets the player reorder the active lineup or swap in bench Pokemon. `BattleScene` then computes a lead-vs-lead type matchup tier (overwhelming/advantage/neutral/disadvantage/overwhelmed), builds win/lose weights (`1 + total active team power + type bonus` vs. `1 + battle tier weight×2 + type penalty`), shows a win%/lose% bar, and a "Spin" button resolves the outcome. The existing run-ending rule (gym/Elite Four/Champion loss ends the run; everything else has no penalty) still applies on a loss.
+**Battles** (`game/src/battle/roulette.ts`, `TeamManagementScene`, `BattleScene`): before every battle, `TeamManagementScene` shows the player's active team and bench alongside the opponent's roster, and lets the player reorder the active lineup or swap in bench Pokemon. `BattleScene` then computes a lead-vs-lead type matchup tier (overwhelming/advantage/neutral/disadvantage/overwhelmed), builds win/lose weights (`1 + total active team power + type bonus + X-Attack bonus` vs. `1 + battle tier weight×2 + type penalty`), shows a win%/lose% bar, and a "Spin" button resolves the outcome. The existing run-ending rule (gym/Elite Four/Champion loss ends the run; everything else has no penalty) still applies on a loss.
+
+## Items
+
+Three consumables (`game/src/data/items.ts`), found via the "look for an item" action (weighted: X-Attack common, Potion less common, Revive rare — rarity matches impact):
+- **X-Attack**: used proactively during a non-battle segment (the "heal" action slot was repurposed into "Use X-Attack" since there's no HP system to heal) — queues a win-odds bonus (`pendingBoost`) consumed by the very next battle only, then cleared regardless of outcome.
+- **Revive**: used only after losing a run-ending battle (gym/Elite Four/Champion) — retries that exact battle immediately with the same lead Pokemon.
+- **Potion**: used only after losing a run-ending battle — retries the battle, but routes through `TeamManagementScene` first with `mustChangeLeadFrom` set, which blocks continuing until the active lead is no longer the Pokemon that just lost.
+
+Shop/currency stays deferred (not built) — items only come from the "find item" action, not purchased.
 
 ## Visuals
 
-- **Pokemon sprites**: loaded at runtime from PokeAPI's public sprite CDN (`raw.githubusercontent.com/PokeAPI/sprites`) by National Dex number — the same source zeroxm/pokemon-roulette uses. Small `icon` variant for battle/team/action screens, larger `official-artwork` variant for starter selection. See `game/src/data/sprites.ts`.
+- **Pokemon sprites**: loaded at runtime from PokeAPI's public sprite CDN (`raw.githubusercontent.com/PokeAPI/sprites`) by National Dex number — the same source zeroxm/pokemon-roulette uses. Pixel-art sprites only, everywhere (starter select, battle, team management) — the official-artwork variant was tried for starter select but dropped per the user's preference for pixel art throughout. See `game/src/data/sprites.ts`.
 - **Trainer sprites**: skipped — no equivalent clean free source. Trainers stay text-only.
 - **Location themes** (`game/src/data/locationThemes.ts`): each segment gets a dark background color matching its real personality (e.g. Hearthome purple like Fantina, Jubilife beige/silver as the media city, Snowpoint icy blue, Victory Road dramatic red). Not a walkable tile map — still card-based screens, just themed.
 
@@ -81,10 +90,12 @@ None in Phase 1. Every run starts from a blank slate. Persistent unlocks (curren
 
 ## Open Questions
 
-- Shop/heal/item/lore actions are still flavor-text stubs in `ActionScene` — only catching is a real mechanic so far.
+- Only "lore" is still a pure flavor-text stub in `ActionScene` — catching, X-Attack, and item-finding are all real mechanics now.
 - Whether losing a route/rival/commander battle should carry any minor consequence later (currently: none).
 - Whether fainted/lost Pokemon should ever leave the team (currently: team composition never shrinks; only run-ending losses matter).
 - Region minimap showing player position — deferred, to consider once more of the map/UI exists.
+- Shop/currency system — deferred ("keep in mind, not yet"); items currently only come from the "find item" action.
+- Overall visual polish — the user noted the game "looks kind of bland" currently (flat card screens, no animation/juice). Not urgent, but flagged for a future pass beyond the sprite/theme work already done.
 
 ## Changelog
 
@@ -93,3 +104,5 @@ None in Phase 1. Every run starts from a blank slate. Persistent unlocks (curren
 - 2026-07-07: Connected the project to a local git repository (no remote).
 - 2026-07-07: Replaced the battle Win/Lose stub with a real roulette mechanic (modeled on zeroxm/pokemon-roulette) and made catching real, grounded in Bulbapedia encounter/catch-rate data with documented simplifications. Added `TeamManagementScene` for pre-battle team reordering and bench swaps.
 - 2026-07-07: Added real Pokemon sprites (PokeAPI CDN) to starter select, battles, and team management, plus dark per-location background themes matching each city's real personality.
+- 2026-07-07: Switched starter select to pixel-art sprites (dropped the official-artwork variant) so sprite style is consistent everywhere.
+- 2026-07-07: Added real items — X-Attack (pre-battle win-odds boost), Potion and Revive (retry a lost run-ending battle, with or without a forced lead change). Shop/currency and general visual polish noted as future work, not urgent.

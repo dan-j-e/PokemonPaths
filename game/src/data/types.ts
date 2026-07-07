@@ -1,3 +1,5 @@
+import type { ItemType } from './items';
+
 export type ActionType = 'heal' | 'catch' | 'item' | 'lore';
 
 export interface BattleSpec {
@@ -26,4 +28,9 @@ export interface RunState {
   starter?: string;
   team: TeamMember[];
   bench: TeamMember[];
+  items: Record<ItemType, number>;
+  /** X-Attack's queued win-odds bonus for the very next battle only. */
+  pendingBoost: number;
+  /** Set after a Potion retry: the lead species that must NOT still be leading when continuing. */
+  mustChangeLeadFrom?: string;
 }

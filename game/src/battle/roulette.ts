@@ -16,7 +16,7 @@ const TYPE_BONUS: Record<MatchupTier, { win: number; lose: number }> = {
   overwhelmed: { win: 0, lose: 2 },
 };
 
-export function computeBattleOdds(activeTeam: TeamMember[], battle: BattleSpec): BattleOdds {
+export function computeBattleOdds(activeTeam: TeamMember[], battle: BattleSpec, bonusWin = 0): BattleOdds {
   const lead = activeTeam[0];
   const leadSpecies = getSpecies(lead.species);
   const opponentLeadSpecies = getSpecies(battle.roster[0]);
@@ -26,7 +26,7 @@ export function computeBattleOdds(activeTeam: TeamMember[], battle: BattleSpec):
 
   const teamPower = activeTeam.reduce((sum, m) => sum + getPower(m.species), 0);
 
-  const winWeight = 1 + teamPower + bonus.win;
+  const winWeight = 1 + teamPower + bonus.win + bonusWin;
   const loseWeight = 1 + battle.tier * 2 + bonus.lose;
 
   return {

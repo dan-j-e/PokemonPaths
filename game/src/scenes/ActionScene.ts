@@ -4,8 +4,9 @@ import { ACTION_LABELS, ACTION_FLAVOR } from '../data/actions';
 import { ENCOUNTER_TABLES, pickWeightedSpecies } from '../data/encounters';
 import { getSpecies, catchChance } from '../data/species';
 import { themeFor } from '../data/locationThemes';
+import { ITEM_LABELS, XATTACK_BOOST, pickRandomItem } from '../data/items';
 import { createButton } from '../ui/button';
-import type { RunState } from '../data/types';
+import type { ActionType, RunState } from '../data/types';
 
 const MAX_ACTIVE_TEAM = 6;
 
@@ -28,7 +29,7 @@ export class ActionScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(themeFor(segment.id));
 
     this.add
-      .text(400, 40, segment.name, {
+      .text(400, 30, segment.name, {
         fontFamily: 'monospace',
         fontSize: '20px',
         color: '#ffffff',
@@ -36,6 +37,13 @@ export class ActionScene extends Phaser.Scene {
         wordWrap: { width: 700 },
       })
       .setOrigin(0.5);
+
+    this.add.text(
+      20,
+      20,
+      `X-Attack: ${this.runState.items.xAttack}  Potion: ${this.runState.items.potion}  Revive: ${this.runState.items.revive}`,
+      { fontFamily: 'monospace', fontSize: '13px', color: '#aaaaaa' },
+    );
 
     const resultText = this.add
       .text(400, 420, '', {
@@ -64,6 +72,25 @@ export class ActionScene extends Phaser.Scene {
     const showResultThenContinue = (lines: string[]) => {
       resultText.setText(lines.join('\n'));
       createButton(this, 400, 560, 'Continue', advance);
+    };
+
+    const resolveFindItem = (): string => {
+      const item = pickRandomItem();
+      this.runState.items = { ...this.runState.items, [item]: this.runState.items[item] + 1 };
+      return `Found a ${ITEM_LABELS[item]}!`;
+    };
+
+    const resolveUseXAttack = (): string => {
+      if (this.runState.items.xAttack <= 0) return "You don't have any X-Attacks.";
+      this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack - 1 };
+      this.runState.pendingBoost += XATTACK_BOOST;
+      return 'Used an X-Attack! Your next battle odds are boosted.';
+    };
+
+    const resolveAction = (action: ActionType): string => {
+      if (action === 'item') return resolveFindItem();
+      if (action === 'heal') return resolveUseXAttack();
+      return ACTION_FLAVOR[action] ?? '';
     };
 
     const resolveCatchAuto = (): string => {
@@ -104,22 +131,41 @@ export class ActionScene extends Phaser.Scene {
     };
 
     pool.forEach((action, i) => {
-      const btn = createButton(this, 400, 110 + i * 55, ACTION_LABELS[action], () => {
+      const y = 120 + i * 55;
+
+      if (action === 'heal' && this.runState.items.xAttack === 0) {
+        this.add
+          .text(400, y, `${ACTION_LABELS[action]} (none available)`, {
+            fontFamily: 'monospace',
+            fontSize: '20px',
+            color: '#666666',
+            backgroundColor: '#2a2a2a',
+            padding: { x: 12, y: 8 },
+          })
+          .setOrigin(0.5);
+        return;
+      }
+
+      const btn = createButton(this, 400, y, ACTION_LABELS[action], () => {
         lockButtons();
         if (action === 'catch') {
           runManualCatch();
         } else {
-          showResultThenContinue([ACTION_FLAVOR[action]]);
+          showResultThenContinue([resolveAction(action)]);
         }
       });
       buttons.push(btn);
     });
 
-    const spinBtn = createButton(this, 400, 110 + pool.length * 55 + 20, 'Spin (random x2)', () => {
+    const resolveOneRandom = (): string => {
+      const eligible = pool.filter((a) => a !== 'heal' || this.runState.items.xAttack > 0);
+      const action = eligible[Math.floor(Math.random() * eligible.length)];
+      return action === 'catch' ? resolveCatchAuto() : resolveAction(action);
+    };
+
+    const spinBtn = createButton(this, 400, 120 + pool.length * 55 + 20, 'Spin (random x2)', () => {
       lockButtons();
-      const shuffled = [...pool].sort(() => Math.random() - 0.5);
-      const picked = shuffled.slice(0, 2);
-      const lines = picked.map((a) => (a === 'catch' ? resolveCatchAuto() : ACTION_FLAVOR[a]));
+      const lines = [resolveOneRandom(), resolveOneRandom()];
       showResultThenContinue(lines);
     });
     buttons.push(spinBtn);

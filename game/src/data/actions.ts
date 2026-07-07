@@ -1,16 +1,14 @@
 import type { ActionType } from './types';
 
 export const ACTION_LABELS: Record<ActionType, string> = {
-  heal: 'Heal your team',
+  heal: 'Use X-Attack',
   catch: 'Search for a wild Pokemon',
   item: 'Look for an item',
   lore: 'Talk to a local',
 };
 
-export const ACTION_FLAVOR: Record<ActionType, string> = {
-  heal: 'Your team feels refreshed!',
-  catch: 'You caught a wild Pokemon!',
-  item: 'You found an item!',
+// Only 'lore' stays pure flavor — catch/item/heal are resolved dynamically in ActionScene.
+export const ACTION_FLAVOR: Partial<Record<ActionType, string>> = {
   lore: 'You hear a story about the region...',
 };
 

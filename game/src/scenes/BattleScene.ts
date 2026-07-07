@@ -28,6 +28,9 @@ export class BattleScene extends Phaser.Scene {
     const playerLead = this.runState.team[0].species;
     const opponentLead = battle.roster[0];
 
+    // Consumed by this battle's odds regardless of outcome — a fresh pendingBoost only ever applies once.
+    const stateAfterBoost: RunState = { ...this.runState, pendingBoost: 0 };
+
     ensureSpeciesSprites(this, [playerLead, opponentLead], () => {
       this.add.image(220, 130, spriteKey(playerLead)).setDisplaySize(96, 96);
       this.add.image(580, 130, spriteKey(opponentLead)).setDisplaySize(96, 96);
@@ -52,7 +55,7 @@ export class BattleScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      const odds = computeBattleOdds(this.runState.team, battle);
+      const odds = computeBattleOdds(this.runState.team, battle, this.runState.pendingBoost);
       const winPct = Math.round(odds.winProbability * 100);
 
       this.add
@@ -77,7 +80,7 @@ export class BattleScene extends Phaser.Scene {
         .setOrigin(0.5);
 
       const resultText = this.add
-        .text(400, 380, '', {
+        .text(400, 350, '', {
           fontFamily: 'monospace',
           fontSize: '20px',
           color: '#ffff88',
@@ -88,14 +91,39 @@ export class BattleScene extends Phaser.Scene {
 
       const advanceToNext = () => {
         if (subIndex + 1 < battles.length) {
-          this.scene.start('team-management', { ...this.runState, battleSubIndex: subIndex + 1 });
+          this.scene.start('team-management', { ...stateAfterBoost, battleSubIndex: subIndex + 1 });
         } else {
           this.scene.start('overworld', {
-            ...this.runState,
+            ...stateAfterBoost,
             segmentIndex: this.runState.segmentIndex + 1,
             battleSubIndex: undefined,
           });
         }
+      };
+
+      const showLossOptions = () => {
+        resultText.setText('You lost...');
+        let y = 500;
+
+        if (stateAfterBoost.items.revive > 0) {
+          createButton(this, 400, y, `Use Revive (x${stateAfterBoost.items.revive}) — retry, same lead`, () => {
+            const items = { ...stateAfterBoost.items, revive: stateAfterBoost.items.revive - 1 };
+            this.scene.start('battle', { ...stateAfterBoost, items });
+          });
+          y += 45;
+        }
+
+        if (stateAfterBoost.items.potion > 0) {
+          createButton(this, 400, y, `Use Potion (x${stateAfterBoost.items.potion}) — retry, change lead`, () => {
+            const items = { ...stateAfterBoost.items, potion: stateAfterBoost.items.potion - 1 };
+            this.scene.start('team-management', { ...stateAfterBoost, items, mustChangeLeadFrom: playerLead });
+          });
+          y += 45;
+        }
+
+        createButton(this, 400, y, 'Give up', () => {
+          this.scene.start('game-over', { location: segment.name, trainer: battle.trainer });
+        });
       };
 
       const spinBtn = createButton(this, 400, 440, 'Spin', () => {
@@ -106,10 +134,7 @@ export class BattleScene extends Phaser.Scene {
           resultText.setText('You won!');
           createButton(this, 400, 500, 'Continue', advanceToNext);
         } else if (battle.runEnding) {
-          resultText.setText('You lost...');
-          createButton(this, 400, 500, 'Continue', () => {
-            this.scene.start('game-over', { location: segment.name, trainer: battle.trainer });
-          });
+          showLossOptions();
         } else {
           resultText.setText('You lost, but no penalty.');
           createButton(this, 400, 500, 'Continue', advanceToNext);

@@ -59,10 +59,34 @@ export class TeamManagementScene extends Phaser.Scene {
         });
       });
 
+      if (this.runState.mustChangeLeadFrom) {
+        this.add
+          .text(400, 55, `Potion used — reorder so ${this.runState.mustChangeLeadFrom} is no longer leading.`, {
+            fontFamily: 'monospace',
+            fontSize: '13px',
+            color: '#ffcc88',
+            align: 'center',
+            wordWrap: { width: 700 },
+          })
+          .setOrigin(0.5);
+      }
+
       this.redrawTeam();
 
+      const warningText = this.add.text(400, 540, '', {
+        fontFamily: 'monospace',
+        fontSize: '13px',
+        color: '#ff8888',
+        align: 'center',
+        wordWrap: { width: 700 },
+      }).setOrigin(0.5);
+
       createButton(this, 400, 570, 'Continue to Battle', () => {
-        this.scene.start('battle', this.runState);
+        if (this.runState.mustChangeLeadFrom && this.runState.team[0].species === this.runState.mustChangeLeadFrom) {
+          warningText.setText(`You must lead with a Pokemon other than ${this.runState.mustChangeLeadFrom}.`);
+          return;
+        }
+        this.scene.start('battle', { ...this.runState, mustChangeLeadFrom: undefined });
       });
     });
   }

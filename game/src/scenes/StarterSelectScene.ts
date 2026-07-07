@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { createButton } from '../ui/button';
 import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
+import { emptyInventory } from '../data/items';
 
 const STARTERS = ['Turtwig', 'Chimchar', 'Piplup'];
 
@@ -33,6 +34,8 @@ export class StarterSelectScene extends Phaser.Scene {
             starter,
             team: [{ species: starter }],
             bench: [],
+            items: emptyInventory(),
+            pendingBoost: 0,
           });
         });
       });
