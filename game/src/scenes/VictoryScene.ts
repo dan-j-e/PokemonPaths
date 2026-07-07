@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { createButton } from '../ui/button';
+import { THEME } from '../ui/theme';
 
 export class VictoryScene extends Phaser.Scene {
   constructor() {
@@ -7,11 +8,22 @@ export class VictoryScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.setBackgroundColor(0x120a1a);
+
     this.add
-      .text(400, 220, 'Champion Defeated!\nRun Complete', {
+      .text(400, 200, 'CHAMPION DEFEATED', {
         fontFamily: 'monospace',
-        fontSize: '30px',
-        color: '#88ff88',
+        fontSize: '36px',
+        color: THEME.primaryHex,
+        align: 'center',
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(400, 260, 'Run Complete', {
+        fontFamily: 'monospace',
+        fontSize: '20px',
+        color: THEME.secondaryHex,
         align: 'center',
       })
       .setOrigin(0.5);

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { SEGMENTS } from '../data/segments';
+import { THEME } from './theme';
 
 const GYM_SEGMENT_INDICES = SEGMENTS.reduce<number[]>((acc, seg, i) => {
   if (seg.isGym) acc.push(i);
@@ -18,14 +19,14 @@ export function drawProgressBar(scene: Phaser.Scene, segmentIndex: number): void
   const gymCount = GYM_SEGMENT_INDICES.length;
   const spacing = (TRACK_BOTTOM_Y - TRACK_TOP_Y) / (gymCount + 1);
 
-  scene.add.rectangle(TRACK_X, TRACK_TOP_Y, 2, TRACK_BOTTOM_Y - TRACK_TOP_Y, 0x444444).setOrigin(0.5, 0);
+  scene.add.rectangle(TRACK_X, TRACK_TOP_Y, 2, TRACK_BOTTOM_Y - TRACK_TOP_Y, THEME.tertiary, 0.5).setOrigin(0.5, 0);
 
   const championLit = segmentIndex >= LEAGUE_INDEX;
   scene.add
     .text(TRACK_X, TRACK_TOP_Y, '★', {
       fontFamily: 'monospace',
       fontSize: '20px',
-      color: championLit ? '#ffd700' : '#555555',
+      color: championLit ? THEME.primaryHex : '#3a3a4a',
     })
     .setOrigin(0.5);
 
@@ -33,6 +34,8 @@ export function drawProgressBar(scene: Phaser.Scene, segmentIndex: number): void
     const positionFromTop = gymCount - i;
     const y = TRACK_TOP_Y + positionFromTop * spacing;
     const lit = segmentIndex > gymIndex;
-    scene.add.circle(TRACK_X, y, 8, lit ? 0xffd700 : 0x333333).setStrokeStyle(2, lit ? 0xffffff : 0x555555);
+    scene.add
+      .circle(TRACK_X, y, 8, lit ? THEME.secondary : 0x24243a)
+      .setStrokeStyle(2, lit ? THEME.secondary : 0x3a3a4a);
   });
 }

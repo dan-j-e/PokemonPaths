@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { createButton } from '../ui/button';
+import { THEME } from '../ui/theme';
 
 interface GameOverData {
   location: string;
@@ -18,11 +19,22 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   create() {
+    this.cameras.main.setBackgroundColor(0x140a0a);
+
     this.add
-      .text(400, 220, `Run Over\nLost to ${this.info.trainer}\nat ${this.info.location}`, {
+      .text(400, 200, 'RUN OVER', {
         fontFamily: 'monospace',
-        fontSize: '26px',
-        color: '#ff8888',
+        fontSize: '40px',
+        color: THEME.dangerHex,
+        align: 'center',
+      })
+      .setOrigin(0.5);
+
+    this.add
+      .text(400, 260, `Lost to ${this.info.trainer}\nat ${this.info.location}`, {
+        fontFamily: 'monospace',
+        fontSize: '20px',
+        color: THEME.text,
         align: 'center',
         wordWrap: { width: 600 },
       })

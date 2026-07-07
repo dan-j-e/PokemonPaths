@@ -5,6 +5,7 @@ import { createButton } from '../ui/button';
 import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
 import { themeFor } from '../data/locationThemes';
 import { drawProgressBar } from '../ui/progressBar';
+import { THEME } from '../ui/theme';
 import { applyBattleWin, applyEvolution } from '../data/evolutions';
 import type { EvolutionOffer } from '../data/evolutions';
 import type { RunState } from '../data/types';
@@ -44,7 +45,7 @@ export class BattleScene extends Phaser.Scene {
         .text(400, 90, `${locationLabel}\nvs. ${battle.trainer}`, {
           fontFamily: 'monospace',
           fontSize: '22px',
-          color: '#ffffff',
+          color: THEME.text,
           align: 'center',
           wordWrap: { width: 700 },
         })
@@ -54,7 +55,7 @@ export class BattleScene extends Phaser.Scene {
         .text(400, 190, `Roster: ${battle.roster.join(', ')}`, {
           fontFamily: 'monospace',
           fontSize: '15px',
-          color: '#cccccc',
+          color: THEME.textMuted,
           align: 'center',
           wordWrap: { width: 700 },
         })
@@ -67,20 +68,20 @@ export class BattleScene extends Phaser.Scene {
         .text(400, 240, `Lead matchup: ${odds.tier}`, {
           fontFamily: 'monospace',
           fontSize: '18px',
-          color: '#88ccff',
+          color: THEME.secondaryHex,
         })
         .setOrigin(0.5);
 
       const barWidth = 400;
       const barX = 400 - barWidth / 2;
       const barY = 280;
-      this.add.rectangle(barX, barY, barWidth, 30, 0x883333).setOrigin(0, 0);
-      this.add.rectangle(barX, barY, (barWidth * winPct) / 100, 30, 0x33aa33).setOrigin(0, 0);
+      this.add.rectangle(barX, barY, barWidth, 30, THEME.danger, 0.35).setOrigin(0, 0);
+      this.add.rectangle(barX, barY, (barWidth * winPct) / 100, 30, THEME.success, 0.85).setOrigin(0, 0);
       this.add
         .text(400, barY + 15, `Win ${winPct}% / Lose ${100 - winPct}%`, {
           fontFamily: 'monospace',
           fontSize: '16px',
-          color: '#ffffff',
+          color: THEME.text,
         })
         .setOrigin(0.5);
 
@@ -88,7 +89,7 @@ export class BattleScene extends Phaser.Scene {
         .text(400, 350, '', {
           fontFamily: 'monospace',
           fontSize: '20px',
-          color: '#ffff88',
+          color: THEME.primaryHex,
           align: 'center',
           wordWrap: { width: 600 },
         })
@@ -143,7 +144,7 @@ export class BattleScene extends Phaser.Scene {
           .text(400, 470, `${offer.from} wants to evolve into ${offer.to}!`, {
             fontFamily: 'monospace',
             fontSize: '16px',
-            color: '#88ffcc',
+            color: THEME.secondaryHex,
             align: 'center',
             wordWrap: { width: 700 },
           })

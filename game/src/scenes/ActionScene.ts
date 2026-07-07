@@ -10,6 +10,7 @@ import { computeBattleOdds, spinBattle } from '../battle/roulette';
 import { applyBattleWin, applyEvolution } from '../data/evolutions';
 import { createButton } from '../ui/button';
 import { drawProgressBar } from '../ui/progressBar';
+import { THEME } from '../ui/theme';
 import type { EvolutionOffer } from '../data/evolutions';
 import type { RunState } from '../data/types';
 
@@ -45,7 +46,7 @@ export class ActionScene extends Phaser.Scene {
       .text(400, 30, segment.name, {
         fontFamily: 'monospace',
         fontSize: '20px',
-        color: '#ffffff',
+        color: THEME.text,
         align: 'center',
         wordWrap: { width: 700 },
       })
@@ -55,14 +56,14 @@ export class ActionScene extends Phaser.Scene {
       20,
       20,
       `X-Attack: ${this.runState.items.xAttack}  Potion: ${this.runState.items.potion}  Revive: ${this.runState.items.revive}`,
-      { fontFamily: 'monospace', fontSize: '13px', color: '#aaaaaa' },
+      { fontFamily: 'monospace', fontSize: '13px', color: THEME.textMuted },
     );
 
     const resultText = this.add
       .text(400, 420, '', {
         fontFamily: 'monospace',
         fontSize: '16px',
-        color: '#ffff88',
+        color: THEME.primaryHex,
         align: 'center',
         wordWrap: { width: 700 },
       })
@@ -87,7 +88,7 @@ export class ActionScene extends Phaser.Scene {
         .text(400, 480, `${offer.from} wants to evolve into ${offer.to}!`, {
           fontFamily: 'monospace',
           fontSize: '16px',
-          color: '#88ffcc',
+          color: THEME.secondaryHex,
           align: 'center',
           wordWrap: { width: 700 },
         })
@@ -222,9 +223,9 @@ export class ActionScene extends Phaser.Scene {
           .text(400, y, `${ACTION_LABELS[action]} (none available)`, {
             fontFamily: 'monospace',
             fontSize: '20px',
-            color: '#666666',
-            backgroundColor: '#2a2a2a',
-            padding: { x: 12, y: 8 },
+            color: THEME.buttonDisabledText,
+            backgroundColor: '#14141f',
+            padding: { x: 16, y: 10 },
           })
           .setOrigin(0.5);
         return;

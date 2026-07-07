@@ -88,7 +88,8 @@ Trade is a planned fourth interact outcome, not built yet.
 - **Pokemon sprites**: loaded at runtime from PokeAPI's public sprite CDN (`raw.githubusercontent.com/PokeAPI/sprites`) by National Dex number — the same source zeroxm/pokemon-roulette uses. Pixel-art sprites only, everywhere (starter select, battle, team management) — the official-artwork variant was tried for starter select but dropped per the user's preference for pixel art throughout. See `game/src/data/sprites.ts`.
 - **Trainer sprites**: skipped — no equivalent clean free source. Trainers stay text-only.
 - **Location themes** (`game/src/data/locationThemes.ts`): each segment gets a dark background color matching its real personality (e.g. Hearthome purple like Fantina, Jubilife beige/silver as the media city, Snowpoint icy blue, Victory Road dramatic red). Not a walkable tile map — still card-based screens, just themed.
-- **Progress bar** (`game/src/ui/progressBar.ts`): a vertical badge-case track on the right edge of every screen (Overworld, Action, Team Management, Battle) — 8 gym pips light up as each gym is passed, a Champion star sits at the top as the run's ultimate goal. Purely derived from `segmentIndex` and each gym segment's `isGym` flag/position — no separate progress state to track. A "neo Tokyo" UI reskin (more modern, neon-leaning visual direction) is queued as its own future session.
+- **Progress bar** (`game/src/ui/progressBar.ts`): a vertical badge-case track on the right edge of every screen (Overworld, Action, Team Management, Battle) — 8 gym pips light up as each gym is passed, a Champion star sits at the top as the run's ultimate goal. Purely derived from `segmentIndex` and each gym segment's `isGym` flag/position — no separate progress state to track.
+- **"Neo Tokyo" theme** (`game/src/ui/theme.ts`): classic cyberpunk neon palette — near-black background (`#0a0a12`), light lavender text, hot pink primary (`#ff2e88`), cyan secondary (`#00e5ff`), purple tertiary (`#9d4edd`), acid green success / red danger. Per-location background colors (`locationThemes.ts`) are kept as-is — the neon theme is the uniform chrome layered on top (buttons, bars, progress track, standard text colors), not a replacement for location identity. `game/src/ui/button.ts` draws rounded, solid-neon-filled buttons (Phaser `Graphics.fillRoundedRect` paired with a `Text` label) rather than flat rectangular backgrounds — a softer, modern-app feel rather than a sharp/glowing HUD look. `GameOverScene` and `VictoryScene` get their own near-black red/purple backgrounds and bigger primary/secondary-colored headlines as the run's dramatic endpoints.
 
 ## Evolution & Training
 
@@ -107,19 +108,18 @@ None in Phase 1. Every run starts from a blank slate. Persistent unlocks (curren
 
 ## Future Direction (queued, in this order)
 
-1. **"Neo Tokyo" UI reskin** — a more modern, neon-leaning visual direction across all screens. Not yet designed (color palette, typography, effects all open).
-2. **Poke Ball variety** — different ball types with different catch-odds multipliers, extending the current flat `catchRate/255` formula.
-3. Trade as a fourth "interact" outcome.
-4. Region randomization or player-selectable region.
-5. Meta-progression systems between runs.
-6. A full walkable tile-based overworld with a region minimap showing player position (explicitly deferred — to be considered once more of the map/UI exists).
+1. **Poke Ball variety** — different ball types with different catch-odds multipliers, extending the current flat `catchRate/255` formula.
+2. Trade as a fourth "interact" outcome.
+3. Region randomization or player-selectable region.
+4. Meta-progression systems between runs.
+5. A full walkable tile-based overworld with a region minimap showing player position (explicitly deferred — to be considered once more of the map/UI exists).
 
 ## Open Questions
 
 - Whether losing a route/rival/commander battle should carry any minor consequence later (currently: none).
 - Whether fainted/lost Pokemon should ever leave the team (currently: team composition never shrinks; only run-ending losses matter).
 - Shop/currency system — deferred ("keep in mind, not yet"); items currently only come from the "find item" action.
-- Overall visual polish — the user noted the game "looks kind of bland" currently (flat card screens, no animation/juice). Not urgent, but flagged for a future pass beyond the sprite/theme work already done.
+- Further visual "juice" (animation, transitions, particle effects) beyond the static neo Tokyo color/shape reskin — not requested yet, flagged as a possible future pass.
 
 ## Changelog
 
@@ -133,3 +133,4 @@ None in Phase 1. Every run starts from a blank slate. Persistent unlocks (curren
 - 2026-07-07: Replaced "lore" with "interact" — resolves to a generated route trainer battle (reusing the existing roulette engine via `RunState.adHocBattle`), an item find, or nothing. Queued next: evolution, then Poke Ball variety, then trade as interact's fourth outcome.
 - 2026-07-07: Trimmed the run from 37 to 23 segments (13 battle, 10 non-battle) to hit a 5-10 minute target — cut 5 redundant Team Galactic battles, simplified Veilstone's triple to solo Cyrus, merged every resulting run of non-battle segments into one each. Added a right-side progress bar (8 gym badges + Champion star). Re-sequenced the future queue: evolution/training next, then a "neo Tokyo" UI reskin, then Poke Ball variety.
 - 2026-07-07: Added the evolution system — win-count-as-lead trigger (2 wins), Yes/No prompt (even on instant spin-resolved wins), full un-skipped Wurmple branch (added Silcoon/Cascoon), and the permanent EXP Share item. Added 13 evolution-only species to complete reachable chains.
+- 2026-07-08: Applied the "neo Tokyo" UI reskin — cyberpunk neon palette (`ui/theme.ts`), rounded solid-neon buttons (`ui/button.ts`), restyled progress bar/battle odds bar/all scene text colors, dramatic Game Over/Victory endpoints. Per-location background colors kept as-is per the user's direction (neon chrome layered on top, not a replacement).

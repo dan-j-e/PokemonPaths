@@ -3,6 +3,7 @@ import { SEGMENTS } from '../data/segments';
 import { themeFor } from '../data/locationThemes';
 import { createButton } from '../ui/button';
 import { drawProgressBar } from '../ui/progressBar';
+import { THEME } from '../ui/theme';
 import type { RunState } from '../data/types';
 
 export class OverworldScene extends Phaser.Scene {
@@ -30,7 +31,7 @@ export class OverworldScene extends Phaser.Scene {
       .text(400, 200, segment.name, {
         fontFamily: 'monospace',
         fontSize: '26px',
-        color: '#ffffff',
+        color: THEME.text,
         align: 'center',
         wordWrap: { width: 600 },
       })

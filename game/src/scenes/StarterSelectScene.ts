@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { createButton } from '../ui/button';
 import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
 import { emptyInventory } from '../data/items';
+import { THEME } from '../ui/theme';
 
 const STARTERS = ['Turtwig', 'Chimchar', 'Piplup'];
 
@@ -17,7 +18,7 @@ export class StarterSelectScene extends Phaser.Scene {
       .text(400, 60, 'Twinleaf Town\nChoose your starter', {
         fontFamily: 'monospace',
         fontSize: '28px',
-        color: '#ffffff',
+        color: THEME.text,
         align: 'center',
       })
       .setOrigin(0.5);

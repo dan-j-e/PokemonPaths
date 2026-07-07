@@ -3,7 +3,9 @@ import { SEGMENTS } from '../data/segments';
 import { getSpecies } from '../data/species';
 import { createButton } from '../ui/button';
 import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
+import { themeFor } from '../data/locationThemes';
 import { drawProgressBar } from '../ui/progressBar';
+import { THEME } from '../ui/theme';
 import { EVOLUTIONS, EVOLUTION_WIN_THRESHOLD } from '../data/evolutions';
 import type { RunState, TeamMember } from '../data/types';
 
@@ -40,6 +42,8 @@ export class TeamManagementScene extends Phaser.Scene {
     const battle = this.runState.adHocBattle ?? (segment.battles ?? [])[this.runState.battleSubIndex ?? 0];
     const locationLabel = this.runState.adHocBattle ? 'Trainer Encounter' : segment.name;
 
+    this.cameras.main.setBackgroundColor(themeFor(segment.id));
+
     drawProgressBar(this, this.runState.segmentIndex);
 
     const allSpecies = [
@@ -53,7 +57,7 @@ export class TeamManagementScene extends Phaser.Scene {
         .text(400, 25, `${locationLabel}\nvs. ${battle.trainer}`, {
           fontFamily: 'monospace',
           fontSize: '18px',
-          color: '#ffffff',
+          color: THEME.text,
           align: 'center',
           wordWrap: { width: 760 },
         })
@@ -62,14 +66,14 @@ export class TeamManagementScene extends Phaser.Scene {
       this.add.text(560, 80, 'Opponent team:', {
         fontFamily: 'monospace',
         fontSize: '14px',
-        color: '#ffaaaa',
+        color: THEME.dangerHex,
       });
       battle.roster.forEach((species, i) => {
         this.add.image(575, 108 + i * 34, spriteKey(species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
         this.add.text(595, 108 + i * 34 - 10, describe(species), {
           fontFamily: 'monospace',
           fontSize: '13px',
-          color: '#ffaaaa',
+          color: THEME.dangerHex,
         });
       });
 
@@ -78,7 +82,7 @@ export class TeamManagementScene extends Phaser.Scene {
           .text(400, 55, `Potion used — reorder so ${this.runState.mustChangeLeadFrom} is no longer leading.`, {
             fontFamily: 'monospace',
             fontSize: '13px',
-            color: '#ffcc88',
+            color: THEME.primaryHex,
             align: 'center',
             wordWrap: { width: 700 },
           })
@@ -90,7 +94,7 @@ export class TeamManagementScene extends Phaser.Scene {
       const warningText = this.add.text(400, 540, '', {
         fontFamily: 'monospace',
         fontSize: '13px',
-        color: '#ff8888',
+        color: THEME.dangerHex,
         align: 'center',
         wordWrap: { width: 700 },
       }).setOrigin(0.5);
@@ -113,7 +117,7 @@ export class TeamManagementScene extends Phaser.Scene {
       this.add.text(40, 80, 'Your active team (top = lead):', {
         fontFamily: 'monospace',
         fontSize: '14px',
-        color: '#88ff88',
+        color: THEME.successHex,
       }),
     );
 
@@ -123,7 +127,7 @@ export class TeamManagementScene extends Phaser.Scene {
       const row = this.add.text(70, y, `${i + 1}. ${describeMember(member)}`, {
         fontFamily: 'monospace',
         fontSize: '14px',
-        color: '#ffffff',
+        color: THEME.text,
       });
       this.dynamicObjects.push(icon, row);
 
@@ -143,7 +147,7 @@ export class TeamManagementScene extends Phaser.Scene {
       this.add.text(40, benchY, 'Bench:', {
         fontFamily: 'monospace',
         fontSize: '14px',
-        color: '#8888ff',
+        color: THEME.tertiaryHex,
       }),
     );
 
@@ -153,7 +157,7 @@ export class TeamManagementScene extends Phaser.Scene {
       const row = this.add.text(70, y, describeMember(member), {
         fontFamily: 'monospace',
         fontSize: '14px',
-        color: '#cccccc',
+        color: THEME.textMuted,
       });
       this.dynamicObjects.push(icon, row);
 
