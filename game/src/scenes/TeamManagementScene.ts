@@ -10,8 +10,9 @@ import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
 import { EVOLUTIONS, EVOLUTION_WIN_THRESHOLD } from '../data/evolutions';
 import type { RunState, TeamMember } from '../data/types';
 
-const ICON_SIZE = 36;
-const ROW_HEIGHT = 26;
+const ICON_SIZE = 40;
+const OPPONENT_ICON_SIZE = 36;
+const ROW_HEIGHT = 32;
 
 function describe(species: string): string {
   const s = getSpecies(species);
@@ -72,12 +73,12 @@ export class TeamManagementScene extends Phaser.Scene {
       });
       battle.roster.forEach((species, i) => {
         const y = 100 + i * ROW_HEIGHT;
-        this.add.image(575, y + 10, spriteKey(species)).setDisplaySize(28, 28);
-        this.add.text(595, y, describe(species), {
+        this.add.image(578, y + 10, spriteKey(species)).setDisplaySize(OPPONENT_ICON_SIZE, OPPONENT_ICON_SIZE);
+        this.add.text(602, y, describe(species), {
           fontFamily: FONT_BODY,
           fontSize: '13px',
           color: THEME.text,
-          wordWrap: { width: 170 },
+          wordWrap: { width: 158 },
         });
       });
 
@@ -96,7 +97,7 @@ export class TeamManagementScene extends Phaser.Scene {
       this.redrawTeam();
 
       const warningText = this.add
-        .text(400, 490, '', {
+        .text(400, 542, '', {
           fontFamily: FONT_BODY,
           fontSize: '13px',
           color: THEME.dangerHex,
@@ -105,7 +106,7 @@ export class TeamManagementScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      createButton(this, 400, 530, 'Continue to Battle', () => {
+      createButton(this, 400, 574, 'Continue to Battle', () => {
         if (this.runState.mustChangeLeadFrom && this.runState.team[0].species === this.runState.mustChangeLeadFrom) {
           warningText.setText(`You must lead with a Pokemon other than ${this.runState.mustChangeLeadFrom}.`);
           return;
@@ -146,8 +147,8 @@ export class TeamManagementScene extends Phaser.Scene {
 
     this.runState.team.forEach((member, i) => {
       const y = teamRowsStartY + i * ROW_HEIGHT;
-      const icon = this.add.image(55, y + 8, spriteKey(member.species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
-      const row = this.add.text(80, y, `${i + 1}. ${describeMember(member)}`, {
+      const icon = this.add.image(60, y + 8, spriteKey(member.species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
+      const row = this.add.text(88, y, `${i + 1}. ${describeMember(member)}`, {
         fontFamily: FONT_BODY,
         fontSize: '13px',
         color: THEME.text,
@@ -176,8 +177,8 @@ export class TeamManagementScene extends Phaser.Scene {
 
     this.runState.bench.forEach((member, i) => {
       const y = benchRowsStartY + i * ROW_HEIGHT;
-      const icon = this.add.image(55, y + 8, spriteKey(member.species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
-      const row = this.add.text(80, y, describeMember(member), {
+      const icon = this.add.image(60, y + 8, spriteKey(member.species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
+      const row = this.add.text(88, y, describeMember(member), {
         fontFamily: FONT_BODY,
         fontSize: '13px',
         color: THEME.textMuted,
