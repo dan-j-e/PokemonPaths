@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { THEME } from './theme';
+import { THEME, FONT_BODY } from './theme';
 
 const PADDING_X = 16;
 const PADDING_Y = 10;
@@ -14,7 +14,7 @@ export function createButton(
 ): Phaser.GameObjects.Text {
   const text = scene.add
     .text(x, y, label, {
-      fontFamily: 'monospace',
+      fontFamily: FONT_BODY,
       fontSize: '20px',
       color: THEME.text,
     })

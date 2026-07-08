@@ -5,11 +5,13 @@ import { createButton } from '../ui/button';
 import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
 import { themeFor } from '../data/locationThemes';
 import { drawProgressBar } from '../ui/progressBar';
-import { THEME } from '../ui/theme';
+import { drawNeoBackground, drawPanel } from '../ui/background';
+import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
 import { EVOLUTIONS, EVOLUTION_WIN_THRESHOLD } from '../data/evolutions';
 import type { RunState, TeamMember } from '../data/types';
 
-const ICON_SIZE = 28;
+const ICON_SIZE = 36;
+const ROW_HEIGHT = 26;
 
 function describe(species: string): string {
   const s = getSpecies(species);
@@ -42,8 +44,7 @@ export class TeamManagementScene extends Phaser.Scene {
     const battle = this.runState.adHocBattle ?? (segment.battles ?? [])[this.runState.battleSubIndex ?? 0];
     const locationLabel = this.runState.adHocBattle ? 'Trainer Encounter' : segment.name;
 
-    this.cameras.main.setBackgroundColor(themeFor(segment.id));
-
+    drawNeoBackground(this, themeFor(segment.id));
     drawProgressBar(this, this.runState.segmentIndex);
 
     const allSpecies = [
@@ -55,7 +56,7 @@ export class TeamManagementScene extends Phaser.Scene {
     ensureSpeciesSprites(this, allSpecies, () => {
       this.add
         .text(400, 25, `${locationLabel}\nvs. ${battle.trainer}`, {
-          fontFamily: 'monospace',
+          fontFamily: FONT_TITLE,
           fontSize: '18px',
           color: THEME.text,
           align: 'center',
@@ -63,24 +64,27 @@ export class TeamManagementScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      this.add.text(560, 80, 'Opponent team:', {
-        fontFamily: 'monospace',
+      drawPanel(this, 545, 60, 220, 40 + battle.roster.length * ROW_HEIGHT + 10);
+      this.add.text(560, 70, 'Opponent Team', {
+        fontFamily: FONT_BODY,
         fontSize: '14px',
         color: THEME.dangerHex,
       });
       battle.roster.forEach((species, i) => {
-        this.add.image(575, 108 + i * 34, spriteKey(species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
-        this.add.text(595, 108 + i * 34 - 10, describe(species), {
-          fontFamily: 'monospace',
+        const y = 100 + i * ROW_HEIGHT;
+        this.add.image(575, y + 10, spriteKey(species)).setDisplaySize(28, 28);
+        this.add.text(595, y, describe(species), {
+          fontFamily: FONT_BODY,
           fontSize: '13px',
-          color: THEME.dangerHex,
+          color: THEME.text,
+          wordWrap: { width: 170 },
         });
       });
 
       if (this.runState.mustChangeLeadFrom) {
         this.add
-          .text(400, 55, `Potion used — reorder so ${this.runState.mustChangeLeadFrom} is no longer leading.`, {
-            fontFamily: 'monospace',
+          .text(400, 50, `Potion used — reorder so ${this.runState.mustChangeLeadFrom} is no longer leading.`, {
+            fontFamily: FONT_BODY,
             fontSize: '13px',
             color: THEME.primaryHex,
             align: 'center',
@@ -91,15 +95,17 @@ export class TeamManagementScene extends Phaser.Scene {
 
       this.redrawTeam();
 
-      const warningText = this.add.text(400, 540, '', {
-        fontFamily: 'monospace',
-        fontSize: '13px',
-        color: THEME.dangerHex,
-        align: 'center',
-        wordWrap: { width: 700 },
-      }).setOrigin(0.5);
+      const warningText = this.add
+        .text(400, 490, '', {
+          fontFamily: FONT_BODY,
+          fontSize: '13px',
+          color: THEME.dangerHex,
+          align: 'center',
+          wordWrap: { width: 700 },
+        })
+        .setOrigin(0.5);
 
-      createButton(this, 400, 570, 'Continue to Battle', () => {
+      createButton(this, 400, 530, 'Continue to Battle', () => {
         if (this.runState.mustChangeLeadFrom && this.runState.team[0].species === this.runState.mustChangeLeadFrom) {
           warningText.setText(`You must lead with a Pokemon other than ${this.runState.mustChangeLeadFrom}.`);
           return;
@@ -113,26 +119,44 @@ export class TeamManagementScene extends Phaser.Scene {
     this.dynamicObjects.forEach((obj) => obj.destroy());
     this.dynamicObjects = [];
 
+    const teamCount = this.runState.team.length;
+    const benchCount = this.runState.bench.length;
+    const teamRowsStartY = 112;
+    const benchLabelY = teamRowsStartY + teamCount * ROW_HEIGHT + 10;
+    const benchRowsStartY = benchLabelY + 20;
+    const contentBottomY = benchRowsStartY + benchCount * ROW_HEIGHT + (benchCount === 0 ? 10 : 0);
+
+    this.dynamicObjects.push(drawPanel(this, 20, 60, 505, contentBottomY - 60 + 10));
+
     this.dynamicObjects.push(
-      this.add.text(40, 80, 'Your active team (top = lead):', {
-        fontFamily: 'monospace',
+      this.add.text(40, 75, 'Your Team (top = lead)', {
+        fontFamily: FONT_BODY,
         fontSize: '14px',
         color: THEME.successHex,
       }),
     );
+    this.dynamicObjects.push(
+      this.add.text(40, 93, 'Reordering changes battle odds', {
+        fontFamily: FONT_BODY,
+        fontSize: '11px',
+        fontStyle: 'italic',
+        color: THEME.textMuted,
+      }),
+    );
 
     this.runState.team.forEach((member, i) => {
-      const y = 110 + i * 34;
-      const icon = this.add.image(50, y + 10, spriteKey(member.species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
-      const row = this.add.text(70, y, `${i + 1}. ${describeMember(member)}`, {
-        fontFamily: 'monospace',
-        fontSize: '14px',
+      const y = teamRowsStartY + i * ROW_HEIGHT;
+      const icon = this.add.image(55, y + 8, spriteKey(member.species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
+      const row = this.add.text(80, y, `${i + 1}. ${describeMember(member)}`, {
+        fontFamily: FONT_BODY,
+        fontSize: '13px',
         color: THEME.text,
+        wordWrap: { width: 340 },
       });
       this.dynamicObjects.push(icon, row);
 
       if (i > 0) {
-        const upBtn = createButton(this, 420, y + 10, 'Move up', () => {
+        const upBtn = createButton(this, 460, y + 8, 'Up', () => {
           const team = [...this.runState.team];
           [team[i - 1], team[i]] = [team[i], team[i - 1]];
           this.runState = { ...this.runState, team };
@@ -142,26 +166,26 @@ export class TeamManagementScene extends Phaser.Scene {
       }
     });
 
-    const benchY = 110 + this.runState.team.length * 34 + 30;
     this.dynamicObjects.push(
-      this.add.text(40, benchY, 'Bench:', {
-        fontFamily: 'monospace',
+      this.add.text(40, benchLabelY, 'Bench', {
+        fontFamily: FONT_BODY,
         fontSize: '14px',
         color: THEME.tertiaryHex,
       }),
     );
 
     this.runState.bench.forEach((member, i) => {
-      const y = benchY + 30 + i * 34;
-      const icon = this.add.image(50, y + 10, spriteKey(member.species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
-      const row = this.add.text(70, y, describeMember(member), {
-        fontFamily: 'monospace',
-        fontSize: '14px',
+      const y = benchRowsStartY + i * ROW_HEIGHT;
+      const icon = this.add.image(55, y + 8, spriteKey(member.species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
+      const row = this.add.text(80, y, describeMember(member), {
+        fontFamily: FONT_BODY,
+        fontSize: '13px',
         color: THEME.textMuted,
+        wordWrap: { width: 340 },
       });
       this.dynamicObjects.push(icon, row);
 
-      const swapBtn = createButton(this, 420, y + 10, 'Swap in', () => {
+      const swapBtn = createButton(this, 460, y + 8, 'Swap', () => {
         const bench = [...this.runState.bench];
         const team = [...this.runState.team];
         const [incoming] = bench.splice(i, 1);

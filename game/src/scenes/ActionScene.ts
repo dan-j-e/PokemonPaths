@@ -10,11 +10,13 @@ import { computeBattleOdds, spinBattle } from '../battle/roulette';
 import { applyBattleWin, applyEvolution } from '../data/evolutions';
 import { createButton } from '../ui/button';
 import { drawProgressBar } from '../ui/progressBar';
-import { THEME } from '../ui/theme';
+import { drawNeoBackground } from '../ui/background';
+import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
 import type { EvolutionOffer } from '../data/evolutions';
 import type { RunState } from '../data/types';
 
 const MAX_ACTIVE_TEAM = 6;
+const MAX_TOTAL_ROSTER = 12;
 
 type InteractOutcome = 'battle' | 'item' | 'nothing';
 
@@ -39,12 +41,12 @@ export class ActionScene extends Phaser.Scene {
     const pool = segment.actionPool ?? [];
     const buttons: Phaser.GameObjects.Text[] = [];
 
-    this.cameras.main.setBackgroundColor(themeFor(segment.id));
+    drawNeoBackground(this, themeFor(segment.id));
     drawProgressBar(this, this.runState.segmentIndex);
 
     this.add
       .text(400, 30, segment.name, {
-        fontFamily: 'monospace',
+        fontFamily: FONT_TITLE,
         fontSize: '20px',
         color: THEME.text,
         align: 'center',
@@ -56,12 +58,12 @@ export class ActionScene extends Phaser.Scene {
       20,
       20,
       `X-Attack: ${this.runState.items.xAttack}  Potion: ${this.runState.items.potion}  Revive: ${this.runState.items.revive}`,
-      { fontFamily: 'monospace', fontSize: '13px', color: THEME.textMuted },
+      { fontFamily: FONT_BODY, fontSize: '13px', color: THEME.textMuted },
     );
 
     const resultText = this.add
       .text(400, 420, '', {
-        fontFamily: 'monospace',
+        fontFamily: FONT_BODY,
         fontSize: '16px',
         color: THEME.primaryHex,
         align: 'center',
@@ -71,12 +73,16 @@ export class ActionScene extends Phaser.Scene {
 
     const lockButtons = () => buttons.forEach((b) => b.disableInteractive());
 
-    const addToTeam = (species: string) => {
+    const addToTeam = (species: string): boolean => {
+      if (this.runState.team.length + this.runState.bench.length >= MAX_TOTAL_ROSTER) {
+        return false;
+      }
       if (this.runState.team.length < MAX_ACTIVE_TEAM) {
         this.runState.team = [...this.runState.team, { species }];
       } else {
         this.runState.bench = [...this.runState.bench, { species }];
       }
+      return true;
     };
 
     const advance = () => {
@@ -85,8 +91,8 @@ export class ActionScene extends Phaser.Scene {
 
     const showEvolvePrompt = (offer: EvolutionOffer, onDone: () => void) => {
       const promptText = this.add
-        .text(400, 480, `${offer.from} wants to evolve into ${offer.to}!`, {
-          fontFamily: 'monospace',
+        .text(400, 480, `${offer.from} wants to evolve into ${offer.to}! Evolving changes its species and type.`, {
+          fontFamily: FONT_BODY,
           fontSize: '16px',
           color: THEME.secondaryHex,
           align: 'center',
@@ -94,17 +100,17 @@ export class ActionScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      const yesBtn = createButton(this, 320, 520, 'Yes', () => {
+      const yesBtn = createButton(this, 320, 525, 'Yes', () => {
         yesBtn.disableInteractive();
         noBtn.disableInteractive();
         this.runState.team = applyEvolution(this.runState.team, offer.memberIndex, offer.to);
         promptText.setText(`${offer.from} evolved into ${offer.to}!`);
-        createButton(this, 400, 560, 'Continue', onDone);
+        createButton(this, 400, 565, 'Continue', onDone);
       });
-      const noBtn = createButton(this, 480, 520, 'No', () => {
+      const noBtn = createButton(this, 480, 525, 'No', () => {
         yesBtn.disableInteractive();
         noBtn.disableInteractive();
-        createButton(this, 400, 560, 'Continue', onDone);
+        createButton(this, 400, 565, 'Continue', onDone);
       });
     };
 
@@ -136,20 +142,23 @@ export class ActionScene extends Phaser.Scene {
 
     const resolveCatchAuto = (): string => {
       const table = ENCOUNTER_TABLES[segment.id];
-      if (!table) return 'No wild Pokemon here.';
+      if (!table || table.length === 0) return 'No wild Pokemon here.';
       const species = pickWeightedSpecies(table);
       const rate = getSpecies(species).catchRate ?? 200;
+      const pct = Math.round(catchChance(rate) * 100);
       const success = Math.random() < catchChance(rate);
       if (success) {
-        addToTeam(species);
-        return `A wild ${species} appeared and was caught!`;
+        const added = addToTeam(species);
+        return added
+          ? `A wild ${species} appeared (${pct}% catch chance) and was caught!`
+          : `A wild ${species} appeared (${pct}% catch chance) and was caught, but your party is full!`;
       }
-      return `A wild ${species} appeared and broke free.`;
+      return `A wild ${species} appeared (${pct}% catch chance) and broke free.`;
     };
 
     const runManualCatch = () => {
       const table = ENCOUNTER_TABLES[segment.id];
-      if (!table) {
+      if (!table || table.length === 0) {
         showResultThenContinue(['No wild Pokemon here.']);
         return;
       }
@@ -163,8 +172,8 @@ export class ActionScene extends Phaser.Scene {
         throwBtn.disableInteractive();
         const success = Math.random() < chance;
         if (success) {
-          addToTeam(species);
-          showResultThenContinue([`Caught ${species}!`]);
+          const added = addToTeam(species);
+          showResultThenContinue([added ? `Caught ${species}!` : `Caught ${species}, but your party is full!`]);
         } else {
           showResultThenContinue([`${species} broke free. No penalty.`]);
         }
@@ -219,13 +228,13 @@ export class ActionScene extends Phaser.Scene {
       const y = 120 + i * 55;
 
       if (action === 'heal' && this.runState.items.xAttack === 0) {
+        // Plain muted text, no button-style box — reads as unavailable rather than a dead click target.
         this.add
           .text(400, y, `${ACTION_LABELS[action]} (none available)`, {
-            fontFamily: 'monospace',
-            fontSize: '20px',
+            fontFamily: FONT_BODY,
+            fontSize: '18px',
             color: THEME.buttonDisabledText,
-            backgroundColor: '#14141f',
-            padding: { x: 16, y: 10 },
+            fontStyle: 'italic',
           })
           .setOrigin(0.5);
         return;
@@ -252,7 +261,7 @@ export class ActionScene extends Phaser.Scene {
       return { line: resolveAction(action) };
     };
 
-    const spinBtn = createButton(this, 400, 120 + pool.length * 55 + 20, 'Spin (random x2)', () => {
+    const spinBtn = createButton(this, 400, 120 + pool.length * 55 + 20, 'Spin: 2 Random Rolls', () => {
       lockButtons();
       const result1 = resolveOneRandom();
       const result2 = resolveOneRandom();

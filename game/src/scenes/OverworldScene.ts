@@ -3,7 +3,8 @@ import { SEGMENTS } from '../data/segments';
 import { themeFor } from '../data/locationThemes';
 import { createButton } from '../ui/button';
 import { drawProgressBar } from '../ui/progressBar';
-import { THEME } from '../ui/theme';
+import { drawNeoBackground } from '../ui/background';
+import { THEME, FONT_TITLE } from '../ui/theme';
 import type { RunState } from '../data/types';
 
 export class OverworldScene extends Phaser.Scene {
@@ -24,12 +25,12 @@ export class OverworldScene extends Phaser.Scene {
     }
 
     const segment = SEGMENTS[this.runState.segmentIndex];
-    this.cameras.main.setBackgroundColor(themeFor(segment.id));
+    drawNeoBackground(this, themeFor(segment.id));
     drawProgressBar(this, this.runState.segmentIndex);
 
     this.add
       .text(400, 200, segment.name, {
-        fontFamily: 'monospace',
+        fontFamily: FONT_TITLE,
         fontSize: '26px',
         color: THEME.text,
         align: 'center',

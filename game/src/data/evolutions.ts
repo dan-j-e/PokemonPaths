@@ -40,7 +40,6 @@ export const EVOLUTIONS: Record<string, string | string[]> = {
   Bronzor: 'Bronzong',
   Chingling: 'Chimecho',
   Wingull: 'Pelipper',
-  Tentacool: 'Tentacruel',
   Sneasel: 'Weavile',
   Snover: 'Abomasnow',
   Buneary: 'Lopunny',
@@ -72,11 +71,15 @@ export function applyBattleWin(runState: RunState): WinResult {
     return member;
   });
 
-  const lead = team[0];
-  if ((lead.wins ?? 0) >= EVOLUTION_WIN_THRESHOLD) {
-    const target = pickEvolutionTarget(lead.species);
-    if (target) {
-      return { team, evolutionOffer: { memberIndex: 0, from: lead.species, to: target } };
+  // Check the lead first (priority, since they just fought), then the rest — EXP Share can push
+  // a non-lead member past the threshold too, and they deserve an offer just as much.
+  for (let i = 0; i < team.length; i++) {
+    const member = team[i];
+    if ((member.wins ?? 0) >= EVOLUTION_WIN_THRESHOLD) {
+      const target = pickEvolutionTarget(member.species);
+      if (target) {
+        return { team, evolutionOffer: { memberIndex: i, from: member.species, to: target } };
+      }
     }
   }
   return { team };

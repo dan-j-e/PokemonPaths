@@ -12,6 +12,7 @@ new Phaser.Game({
   width: 800,
   height: 600,
   backgroundColor: '#0a0a12',
+  pixelArt: true,
   parent: document.body,
   scene: [
     StarterSelectScene,

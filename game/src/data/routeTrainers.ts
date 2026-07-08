@@ -7,8 +7,9 @@ const FALLBACK_SPECIES = 'Bidoof';
 
 export function generateRouteTrainer(segmentId: string): BattleSpec {
   const table = ENCOUNTER_TABLES[segmentId];
+  const hasTable = table && table.length > 0;
   const rosterSize = 1 + Math.floor(Math.random() * 2); // 1-2
-  const roster = Array.from({ length: rosterSize }, () => (table ? pickWeightedSpecies(table) : FALLBACK_SPECIES));
+  const roster = Array.from({ length: rosterSize }, () => (hasTable ? pickWeightedSpecies(table) : FALLBACK_SPECIES));
 
   return {
     trainer: GENERIC_TRAINER_NAMES[Math.floor(Math.random() * GENERIC_TRAINER_NAMES.length)],

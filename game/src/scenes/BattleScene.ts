@@ -5,7 +5,8 @@ import { createButton } from '../ui/button';
 import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
 import { themeFor } from '../data/locationThemes';
 import { drawProgressBar } from '../ui/progressBar';
-import { THEME } from '../ui/theme';
+import { drawNeoBackground, drawPanel } from '../ui/background';
+import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
 import { applyBattleWin, applyEvolution } from '../data/evolutions';
 import type { EvolutionOffer } from '../data/evolutions';
 import type { RunState } from '../data/types';
@@ -28,7 +29,7 @@ export class BattleScene extends Phaser.Scene {
     const battle = this.runState.adHocBattle ?? battles[subIndex];
     const locationLabel = this.runState.adHocBattle ? 'Trainer Encounter' : segment.name;
 
-    this.cameras.main.setBackgroundColor(themeFor(segment.id));
+    drawNeoBackground(this, themeFor(segment.id));
     drawProgressBar(this, this.runState.segmentIndex);
 
     const playerLead = this.runState.team[0].species;
@@ -38,12 +39,14 @@ export class BattleScene extends Phaser.Scene {
     const stateAfterBoost: RunState = { ...this.runState, pendingBoost: 0 };
 
     ensureSpeciesSprites(this, [playerLead, opponentLead], () => {
-      this.add.image(220, 130, spriteKey(playerLead)).setDisplaySize(96, 96);
-      this.add.image(580, 130, spriteKey(opponentLead)).setDisplaySize(96, 96);
+      this.add.circle(220, 145, 75, THEME.secondary, 0.15).setDepth(-1);
+      this.add.circle(580, 145, 75, THEME.danger, 0.15).setDepth(-1);
+      this.add.image(220, 145, spriteKey(playerLead)).setDisplaySize(128, 128);
+      this.add.image(580, 145, spriteKey(opponentLead)).setDisplaySize(128, 128);
 
       this.add
-        .text(400, 90, `${locationLabel}\nvs. ${battle.trainer}`, {
-          fontFamily: 'monospace',
+        .text(400, 45, `${locationLabel}\nvs. ${battle.trainer}`, {
+          fontFamily: FONT_TITLE,
           fontSize: '22px',
           color: THEME.text,
           align: 'center',
@@ -52,8 +55,8 @@ export class BattleScene extends Phaser.Scene {
         .setOrigin(0.5);
 
       this.add
-        .text(400, 190, `Roster: ${battle.roster.join(', ')}`, {
-          fontFamily: 'monospace',
+        .text(400, 225, `Roster: ${battle.roster.join(', ')}`, {
+          fontFamily: FONT_BODY,
           fontSize: '15px',
           color: THEME.textMuted,
           align: 'center',
@@ -61,12 +64,14 @@ export class BattleScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
+      drawPanel(this, 150, 248, 500, 100);
+
       const odds = computeBattleOdds(this.runState.team, battle, this.runState.pendingBoost);
       const winPct = Math.round(odds.winProbability * 100);
 
       this.add
-        .text(400, 240, `Lead matchup: ${odds.tier}`, {
-          fontFamily: 'monospace',
+        .text(400, 265, `Lead matchup: ${odds.tier}`, {
+          fontFamily: FONT_BODY,
           fontSize: '18px',
           color: THEME.secondaryHex,
         })
@@ -74,20 +79,35 @@ export class BattleScene extends Phaser.Scene {
 
       const barWidth = 400;
       const barX = 400 - barWidth / 2;
-      const barY = 280;
-      this.add.rectangle(barX, barY, barWidth, 30, THEME.danger, 0.35).setOrigin(0, 0);
-      this.add.rectangle(barX, barY, (barWidth * winPct) / 100, 30, THEME.success, 0.85).setOrigin(0, 0);
+      const barY = 295;
+      const barHeight = 26;
+      const oddsBg = this.add.graphics();
+      oddsBg.fillStyle(THEME.danger, 0.35);
+      oddsBg.fillRoundedRect(barX, barY, barWidth, barHeight, 12);
+      const oddsFill = this.add.graphics();
+      oddsFill.fillStyle(THEME.success, 0.85);
+      oddsFill.fillRoundedRect(barX, barY, Math.max(24, (barWidth * winPct) / 100), barHeight, 12);
       this.add
-        .text(400, barY + 15, `Win ${winPct}% / Lose ${100 - winPct}%`, {
-          fontFamily: 'monospace',
+        .text(400, barY + barHeight / 2, `Win ${winPct}% / Lose ${100 - winPct}%`, {
+          fontFamily: FONT_BODY,
           fontSize: '16px',
           color: THEME.text,
         })
         .setOrigin(0.5);
 
+      this.add
+        .text(400, 335, "Only your lead Pokemon's matchup counts — reorder in Team Management", {
+          fontFamily: FONT_BODY,
+          fontSize: '11px',
+          fontStyle: 'italic',
+          color: THEME.textMuted,
+          align: 'center',
+        })
+        .setOrigin(0.5);
+
       const resultText = this.add
-        .text(400, 350, '', {
-          fontFamily: 'monospace',
+        .text(400, 375, '', {
+          fontFamily: FONT_BODY,
           fontSize: '20px',
           color: THEME.primaryHex,
           align: 'center',
@@ -116,22 +136,25 @@ export class BattleScene extends Phaser.Scene {
 
       const showLossOptions = () => {
         resultText.setText('You lost...');
-        let y = 500;
+        let y = 480;
 
         if (stateAfterBoost.items.revive > 0) {
           createButton(this, 400, y, `Use Revive (x${stateAfterBoost.items.revive}) — retry, same lead`, () => {
             const items = { ...stateAfterBoost.items, revive: stateAfterBoost.items.revive - 1 };
             this.scene.start('battle', { ...stateAfterBoost, items });
           });
-          y += 45;
+          y += 40;
         }
 
-        if (stateAfterBoost.items.potion > 0) {
+        // Only offer a lead change if one is actually possible — otherwise this would
+        // demand a lead change TeamManagementScene has no way to satisfy (a soft-lock).
+        const canChangeLead = stateAfterBoost.team.length > 1 || stateAfterBoost.bench.length > 0;
+        if (stateAfterBoost.items.potion > 0 && canChangeLead) {
           createButton(this, 400, y, `Use Potion (x${stateAfterBoost.items.potion}) — retry, change lead`, () => {
             const items = { ...stateAfterBoost.items, potion: stateAfterBoost.items.potion - 1 };
             this.scene.start('team-management', { ...stateAfterBoost, items, mustChangeLeadFrom: playerLead });
           });
-          y += 45;
+          y += 40;
         }
 
         createButton(this, 400, y, 'Give up', () => {
@@ -141,8 +164,8 @@ export class BattleScene extends Phaser.Scene {
 
       const showEvolvePrompt = (offer: EvolutionOffer) => {
         const promptText = this.add
-          .text(400, 470, `${offer.from} wants to evolve into ${offer.to}!`, {
-            fontFamily: 'monospace',
+          .text(400, 480, `${offer.from} wants to evolve into ${offer.to}! Evolving changes its species and type.`, {
+            fontFamily: FONT_BODY,
             fontSize: '16px',
             color: THEME.secondaryHex,
             align: 'center',
@@ -150,21 +173,21 @@ export class BattleScene extends Phaser.Scene {
           })
           .setOrigin(0.5);
 
-        const yesBtn = createButton(this, 320, 500, 'Yes', () => {
+        const yesBtn = createButton(this, 320, 525, 'Yes', () => {
           yesBtn.disableInteractive();
           noBtn.disableInteractive();
           stateAfterBoost.team = applyEvolution(stateAfterBoost.team, offer.memberIndex, offer.to);
           promptText.setText(`${offer.from} evolved into ${offer.to}!`);
-          createButton(this, 400, 540, 'Continue', advanceToNext);
+          createButton(this, 400, 565, 'Continue', advanceToNext);
         });
-        const noBtn = createButton(this, 480, 500, 'No', () => {
+        const noBtn = createButton(this, 480, 525, 'No', () => {
           yesBtn.disableInteractive();
           noBtn.disableInteractive();
-          createButton(this, 400, 540, 'Continue', advanceToNext);
+          createButton(this, 400, 565, 'Continue', advanceToNext);
         });
       };
 
-      const spinBtn = createButton(this, 400, 440, 'Spin', () => {
+      const spinBtn = createButton(this, 400, 420, 'Spin', () => {
         spinBtn.disableInteractive();
         const won = spinBattle(odds);
 

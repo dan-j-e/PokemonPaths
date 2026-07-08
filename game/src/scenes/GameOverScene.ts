@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { createButton } from '../ui/button';
-import { THEME } from '../ui/theme';
+import { drawNeoBackground } from '../ui/background';
+import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
 
 interface GameOverData {
   location: string;
@@ -19,11 +20,11 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor(0x140a0a);
+    drawNeoBackground(this, 0x140a0a);
 
     this.add
       .text(400, 200, 'RUN OVER', {
-        fontFamily: 'monospace',
+        fontFamily: FONT_TITLE,
         fontSize: '40px',
         color: THEME.dangerHex,
         align: 'center',
@@ -32,7 +33,7 @@ export class GameOverScene extends Phaser.Scene {
 
     this.add
       .text(400, 260, `Lost to ${this.info.trainer}\nat ${this.info.location}`, {
-        fontFamily: 'monospace',
+        fontFamily: FONT_BODY,
         fontSize: '20px',
         color: THEME.text,
         align: 'center',

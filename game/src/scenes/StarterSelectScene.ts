@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { createButton } from '../ui/button';
 import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
 import { emptyInventory } from '../data/items';
-import { THEME } from '../ui/theme';
+import { drawNeoBackground } from '../ui/background';
+import { THEME, FONT_TITLE } from '../ui/theme';
 
 const STARTERS = ['Turtwig', 'Chimchar', 'Piplup'];
 
@@ -12,11 +13,11 @@ export class StarterSelectScene extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor(0x1f3d2b);
+    drawNeoBackground(this, 0x1f3d2b);
 
     this.add
       .text(400, 60, 'Twinleaf Town\nChoose your starter', {
-        fontFamily: 'monospace',
+        fontFamily: FONT_TITLE,
         fontSize: '28px',
         color: THEME.text,
         align: 'center',
@@ -27,9 +28,10 @@ export class StarterSelectScene extends Phaser.Scene {
       STARTERS.forEach((starter, i) => {
         const x = 200 + i * 200;
 
-        this.add.image(x, 250, spriteKey(starter)).setDisplaySize(120, 120);
+        // 96px native PokeAPI sprite doubled for a crisp, sizeable hero image (pixelArt:true keeps it sharp).
+        this.add.image(x, 240, spriteKey(starter)).setDisplaySize(192, 192);
 
-        createButton(this, x, 360, starter, () => {
+        createButton(this, x, 370, starter, () => {
           this.scene.start('overworld', {
             segmentIndex: 0,
             starter,
