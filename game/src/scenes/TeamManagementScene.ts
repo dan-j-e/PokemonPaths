@@ -8,6 +8,7 @@ import { drawProgressBar } from '../ui/progressBar';
 import { drawNeoBackground, drawPanel } from '../ui/background';
 import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
 import { EVOLUTIONS, EVOLUTION_WIN_THRESHOLD } from '../data/evolutions';
+import { XATTACK_BOOST } from '../data/items';
 import type { RunState, TeamMember } from '../data/types';
 
 const ICON_SIZE = 40;
@@ -81,6 +82,31 @@ export class TeamManagementScene extends Phaser.Scene {
           wordWrap: { width: 158 },
         });
       });
+
+      const oppPanelBottom = 60 + 40 + battle.roster.length * ROW_HEIGHT + 10;
+      let xAttackControl: Phaser.GameObjects.Text | null = null;
+      const renderXAttackControl = () => {
+        xAttackControl?.destroy();
+        if (this.runState.items.xAttack > 0) {
+          xAttackControl = createButton(this, 655, oppPanelBottom + 40, `Use X-Attack (×${this.runState.items.xAttack})`, () => {
+            this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack - 1 };
+            this.runState.pendingBoost += XATTACK_BOOST;
+            renderXAttackControl();
+          });
+        } else {
+          xAttackControl = this.add
+            .text(655, oppPanelBottom + 40, 'X-Attack (none available)', {
+              fontFamily: FONT_BODY,
+              fontSize: '13px',
+              color: THEME.buttonDisabledText,
+              fontStyle: 'italic',
+              align: 'center',
+              wordWrap: { width: 200 },
+            })
+            .setOrigin(0.5);
+        }
+      };
+      renderXAttackControl();
 
       if (this.runState.mustChangeLeadFrom) {
         this.add

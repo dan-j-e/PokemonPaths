@@ -27,7 +27,7 @@ export function drawProgressBar(scene: Phaser.Scene, segmentIndex: number): void
     .text(TRACK_X, TRACK_TOP_Y, '★', {
       fontFamily: FONT_BODY,
       fontSize: '22px',
-      color: championLit ? THEME.primaryHex : '#3a3a4a',
+      color: championLit ? THEME.primaryHex : '#C7C2DC',
     })
     .setOrigin(0.5);
   scene.add
@@ -43,8 +43,8 @@ export function drawProgressBar(scene: Phaser.Scene, segmentIndex: number): void
     const y = TRACK_TOP_Y + positionFromTop * spacing;
     const lit = segmentIndex > gymIndex;
     scene.add
-      .circle(TRACK_X, y, 9, lit ? THEME.secondary : 0x24243a)
-      .setStrokeStyle(2, lit ? THEME.secondary : 0x3a3a4a);
+      .circle(TRACK_X, y, 9, lit ? THEME.secondary : 0xe3e0ee)
+      .setStrokeStyle(2, lit ? THEME.secondary : 0xc7c2dc);
   });
 
   const bottomPipY = TRACK_TOP_Y + gymCount * spacing;

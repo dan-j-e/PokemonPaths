@@ -130,6 +130,10 @@ export const SPECIES: Record<string, SpeciesData> = {
   Staraptor: { type1: 'normal', type2: 'flying', dexNumber: 398, power: 7 },
   Silcoon: { type1: 'bug', dexNumber: 266, power: 2 },
   Cascoon: { type1: 'bug', dexNumber: 268, power: 2 },
+
+  // Legendary encounter (Spear Pillar, post-Cyrus) — Bulbapedia restricted-legendary catch rate.
+  Dialga: { type1: 'steel', type2: 'dragon', dexNumber: 483, catchRate: 3 },
+  Palkia: { type1: 'water', type2: 'dragon', dexNumber: 484, catchRate: 3 },
 };
 
 export function getSpecies(name: string): SpeciesData {

@@ -74,6 +74,27 @@ export const CYRUS_1: BattleSpec = {
   tier: 2,
 };
 
+// Reinstated from the original 37-segment design (cut in the trim to 23) to space Team Galactic
+// battles between gyms 3-5 instead of leaving the Spear Pillar trio as the only mid/late-game showing.
+export const GALACTIC_GRUNT_CELESTIC: BattleSpec = {
+  trainer: 'Team Galactic Grunt',
+  roster: ['Golbat', 'Houndour', 'Croagunk'],
+  runEnding: false,
+  tier: 1,
+};
+export const MARS_3: BattleSpec = {
+  trainer: 'Commander Mars',
+  roster: ['Golbat', 'Purugly'],
+  runEnding: false,
+  tier: 2,
+};
+export const JUPITER_2: BattleSpec = {
+  trainer: 'Commander Jupiter',
+  roster: ['Golbat', 'Bronzor', 'Skuntank'],
+  runEnding: false,
+  tier: 2,
+};
+
 export const MARS_4: BattleSpec = {
   trainer: 'Commander Mars',
   roster: ['Golbat', 'Purugly'],

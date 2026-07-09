@@ -8,9 +8,6 @@ export const ITEM_LABELS: Record<ItemType, string> = {
 
 export const XATTACK_BOOST = 5;
 
-/** Chance a "find item" resolution finds the permanent EXP Share instead, rather than a stackable item. */
-export const EXP_SHARE_FIND_CHANCE = 0.1;
-
 const FIND_WEIGHTS: Record<ItemType, number> = {
   xAttack: 60,
   potion: 30,

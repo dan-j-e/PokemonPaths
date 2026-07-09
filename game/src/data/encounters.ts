@@ -10,11 +10,13 @@ export interface EncounterEntry {
 // pooled tables of the original individual locations it replaced — weights summed where a
 // species appeared in more than one of them).
 export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
-  'route-201-to-oreburgh-gate': [
+  'route-201-202': [
     { species: 'Starly', weight: 115 },
     { species: 'Bidoof', weight: 98 },
     { species: 'Kricketot', weight: 20 },
     { species: 'Shinx', weight: 55 },
+  ],
+  'route-203-oreburgh-gate': [
     { species: 'Zubat', weight: 30 },
     { species: 'Abra', weight: 15 },
     { species: 'Geodude', weight: 80 },
@@ -36,29 +38,31 @@ export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
     { species: 'Budew', weight: 25 },
     { species: 'Buneary', weight: 19 },
   ],
-  'coronet-to-hearthome': [
+  'mt-coronet-crossing': [
     { species: 'Zubat', weight: 65 },
     { species: 'Geodude', weight: 157 },
-    { species: 'Ponyta', weight: 100 },
-    { species: 'Kricketot', weight: 20 },
-    { species: 'Kricketune', weight: 37 },
-    { species: 'Stunky', weight: 25 },
-    { species: 'Bronzor', weight: 10 },
     { species: 'Machop', weight: 72 },
-    { species: 'Cleffa', weight: 12 },
+    { species: 'Bronzor', weight: 10 },
     { species: 'Meditite', weight: 27 },
     { species: 'Chingling', weight: 10 },
+    { species: 'Gastly', weight: 10 },
+    { species: 'Abra', weight: 10 },
+    { species: 'Kadabra', weight: 15 },
+    { species: 'Kricketune', weight: 37 },
+    { species: 'Bonsly', weight: 8 },
+  ],
+  'hearthome-outskirts': [
+    { species: 'Ponyta', weight: 100 },
+    { species: 'Kricketot', weight: 20 },
+    { species: 'Stunky', weight: 25 },
+    { species: 'Cleffa', weight: 12 },
     { species: 'Psyduck', weight: 30 },
     { species: 'Bidoof', weight: 20 },
-    { species: 'Gastly', weight: 10 },
     { species: 'Chansey', weight: 10 },
     { species: 'Starly', weight: 20 },
     { species: 'Staravia', weight: 20 },
     { species: 'Bibarel', weight: 38 },
-    { species: 'Bonsly', weight: 8 },
     { species: 'Mr. Mime', weight: 8 },
-    { species: 'Abra', weight: 10 },
-    { species: 'Kadabra', weight: 15 },
   ],
   'route-213-214': [
     { species: 'Geodude', weight: 20 },
@@ -107,6 +111,12 @@ export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
     { species: 'Cleffa', weight: 12 },
     { species: 'Meditite', weight: 10 },
     { species: 'Chingling', weight: 10 },
+  ],
+  // 50/50 legendary encounter — a fixed 2-entry table doubles as the coin flip (no other
+  // action is offered on this segment, see segments.ts's 'spear-pillar-legendary' entry).
+  'spear-pillar-legendary': [
+    { species: 'Dialga', weight: 1 },
+    { species: 'Palkia', weight: 1 },
   ],
   'route-223-victory-road': [
     { species: 'Tentacruel', weight: 60 },

@@ -1,6 +1,6 @@
 import type { ItemType } from './items';
 
-export type ActionType = 'heal' | 'catch' | 'item' | 'interact';
+export type ActionType = 'catch' | 'item' | 'interact';
 
 export interface BattleSpec {
   trainer: string;
@@ -39,6 +39,6 @@ export interface RunState {
   mustChangeLeadFrom?: string;
   /** A one-off route encounter battle, not part of any segment's static battle list. */
   adHocBattle?: BattleSpec;
-  /** Permanent once found: every win also gives non-lead active team members partial win progress. */
+  /** Granted after winning Gym 4: every win also gives non-lead active team members partial win progress. */
   hasExpShare: boolean;
 }

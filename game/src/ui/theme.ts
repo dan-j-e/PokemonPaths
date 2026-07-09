@@ -1,33 +1,31 @@
-// "Neo Tokyo" palette — classic cyberpunk neon. Location backgrounds (locationThemes.ts) keep
-// their own per-city accent colors; this is the uniform UI chrome layered on top of them
-// (buttons, bars, progress track, standard text colors).
+// Clean minimalist palette — light background, card-based panels, one clear accent color.
+// Location backgrounds (locationThemes.ts) keep their own per-city accent, surfaced now as a thin
+// identity bar at the top of the screen rather than a full-bleed mood background (see background.ts).
+// All text colors below are contrast-checked against the near-white THEME.background/card white.
 
-export const FONT_BODY = '"Share Tech Mono", monospace';
-export const FONT_TITLE = '"Orbitron", "Share Tech Mono", monospace';
+export const FONT_BODY = '"Nunito", sans-serif';
+export const FONT_TITLE = '"Nunito", sans-serif';
 
 export const THEME = {
-  background: 0x0a0a12,
-  text: '#e0e0ff',
-  // Lightened from #9a94c2 — the darker value dipped below 4.5:1 contrast on warmer
-  // location backgrounds (e.g. hearthome-city-gym5, sunyshore-city-gym8).
-  textMuted: '#c2bce8',
+  background: 0xf6f4fb,
+  text: '#2e2b3d',
+  textMuted: '#726c8d',
 
-  primary: 0xff2e88, // hot pink
-  primaryHex: '#ff2e88',
-  secondary: 0x00e5ff, // cyan
-  secondaryHex: '#00e5ff',
-  tertiary: 0x9d4edd, // purple
-  tertiaryHex: '#9d4edd',
+  primary: 0xd6336c, // deep rose — ~4.6:1 on white
+  primaryHex: '#d6336c',
+  secondary: 0x1b6fc4, // azure — ~5.1:1 on white
+  secondaryHex: '#1b6fc4',
+  tertiary: 0x6741d9, // violet — ~7:1 on white
+  tertiaryHex: '#6741d9',
 
-  success: 0x39ff14,
-  successHex: '#39ff14',
-  danger: 0xff2e2e,
-  dangerHex: '#ff2e2e',
+  success: 0x177a46, // emerald — ~5.4:1 on white
+  successHex: '#177a46',
+  danger: 0xc92a2a, // brick red — ~6:1 on white
+  dangerHex: '#c92a2a',
 
-  buttonFill: 0x2d1b4e,
-  buttonHoverFill: 0xff2e88,
-  buttonDisabledFill: 0x1a1a2e,
-  buttonDisabledFillHex: '#1a1a2e',
-  // Lightened from #666677 — the darker value was ~3:1 against buttonDisabledFillHex, below AA.
-  buttonDisabledText: '#9490b8',
+  buttonFill: 0xedeaf7,
+  buttonHoverFill: 0xddd2f2,
+  buttonDisabledFill: 0xf0eef6,
+  buttonDisabledFillHex: '#f0eef6',
+  buttonDisabledText: '#b9b5cc',
 } as const;

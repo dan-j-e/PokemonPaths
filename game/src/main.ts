@@ -11,7 +11,7 @@ new Phaser.Game({
   type: Phaser.AUTO,
   width: 800,
   height: 600,
-  backgroundColor: '#0a0a12',
+  backgroundColor: '#f6f4fb',
   pixelArt: true,
   parent: document.body,
   scene: [

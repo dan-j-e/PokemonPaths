@@ -5,8 +5,14 @@ import * as T from './trainers';
 export const SEGMENTS: Segment[] = [
   { id: 'twinleaf-town', name: 'Twinleaf Town', kind: 'battle', battles: [T.BARRY_1] },
   {
-    id: 'route-201-to-oreburgh-gate',
-    name: 'Route 201–203 & Oreburgh Gate',
+    id: 'route-201-202',
+    name: 'Route 201–202',
+    kind: 'non-battle',
+    actionPool: DEFAULT_ACTION_POOL,
+  },
+  {
+    id: 'route-203-oreburgh-gate',
+    name: 'Route 203 & Oreburgh Gate',
     kind: 'non-battle',
     actionPool: DEFAULT_ACTION_POOL,
   },
@@ -32,18 +38,26 @@ export const SEGMENTS: Segment[] = [
     isGym: true,
   },
   {
-    id: 'coronet-to-hearthome',
-    name: 'Mt. Coronet Crossing & Hearthome Outskirts',
+    id: 'mt-coronet-crossing',
+    name: 'Mt. Coronet Crossing',
+    kind: 'non-battle',
+    actionPool: DEFAULT_ACTION_POOL,
+  },
+  {
+    id: 'hearthome-outskirts',
+    name: 'Hearthome Outskirts',
     kind: 'non-battle',
     actionPool: DEFAULT_ACTION_POOL,
   },
   { id: 'veilstone-city-gym3', name: 'Veilstone City — Gym 3', kind: 'battle', battles: [T.GYM_MAYLENE], isGym: true },
+  { id: 'celestic-town', name: 'Celestic Town', kind: 'battle', battles: [T.GALACTIC_GRUNT_CELESTIC] },
   {
     id: 'route-213-214',
     name: 'Route 213 & 214',
     kind: 'non-battle',
     actionPool: DEFAULT_ACTION_POOL,
   },
+  { id: 'lake-verity', name: 'Lake Verity', kind: 'battle', battles: [T.MARS_3] },
   {
     id: 'pastoria-city-gym4',
     name: 'Pastoria City — Gym 4',
@@ -52,6 +66,7 @@ export const SEGMENTS: Segment[] = [
     isGym: true,
   },
   { id: 'route-210-north', name: 'Route 210 (North)', kind: 'non-battle', actionPool: DEFAULT_ACTION_POOL },
+  { id: 'lake-valor', name: 'Lake Valor', kind: 'battle', battles: [T.JUPITER_2] },
   {
     id: 'hearthome-city-gym5',
     name: 'Hearthome City — Gym 5',
@@ -92,6 +107,12 @@ export const SEGMENTS: Segment[] = [
     name: 'Spear Pillar',
     kind: 'battle',
     battles: [T.MARS_4, T.JUPITER_3, T.CYRUS_2],
+  },
+  {
+    id: 'spear-pillar-legendary',
+    name: 'Spear Pillar — Legendary Encounter',
+    kind: 'non-battle',
+    actionPool: ['catch'],
   },
   {
     id: 'sunyshore-city-gym8',

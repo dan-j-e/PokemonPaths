@@ -4,7 +4,7 @@ import { ACTION_LABELS } from '../data/actions';
 import { ENCOUNTER_TABLES, pickWeightedSpecies } from '../data/encounters';
 import { getSpecies, catchChance } from '../data/species';
 import { themeFor } from '../data/locationThemes';
-import { ITEM_LABELS, XATTACK_BOOST, EXP_SHARE_FIND_CHANCE, pickRandomItem } from '../data/items';
+import { ITEM_LABELS, pickRandomItem } from '../data/items';
 import { ensureItemSprites, itemSpriteKey } from '../data/itemSprites';
 import { generateRouteTrainer } from '../data/routeTrainers';
 import { computeBattleOdds, spinBattle } from '../battle/roulette';
@@ -135,20 +135,9 @@ export class ActionScene extends Phaser.Scene {
       };
 
       const resolveFindItem = (): string => {
-        if (!this.runState.hasExpShare && Math.random() < EXP_SHARE_FIND_CHANCE) {
-          this.runState.hasExpShare = true;
-          return 'Found an EXP Share! The rest of your party now gains partial progress from every win.';
-        }
         const item = pickRandomItem();
         this.runState.items = { ...this.runState.items, [item]: this.runState.items[item] + 1 };
         return `Found a ${ITEM_LABELS[item]}!`;
-      };
-
-      const resolveUseXAttack = (): string => {
-        if (this.runState.items.xAttack <= 0) return "You don't have any X-Attacks.";
-        this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack - 1 };
-        this.runState.pendingBoost += XATTACK_BOOST;
-        return 'Used an X-Attack! Your next battle odds are boosted.';
       };
 
       const resolveCatchAuto = (): string => {
@@ -230,26 +219,8 @@ export class ActionScene extends Phaser.Scene {
         this.scene.start('team-management', { ...this.runState, adHocBattle: battle, battleSubIndex: 0 });
       };
 
-      const resolveAction = (action: 'heal' | 'item'): string => {
-        if (action === 'item') return resolveFindItem();
-        return resolveUseXAttack();
-      };
-
       pool.forEach((action, i) => {
         const y = 120 + i * 55;
-
-        if (action === 'heal' && this.runState.items.xAttack === 0) {
-          // Plain muted text, no button-style box — reads as unavailable rather than a dead click target.
-          this.add
-            .text(400, y, `${ACTION_LABELS[action]} (none available)`, {
-              fontFamily: FONT_BODY,
-              fontSize: '18px',
-              color: THEME.buttonDisabledText,
-              fontStyle: 'italic',
-            })
-            .setOrigin(0.5);
-          return;
-        }
 
         const btn = createButton(this, 400, y, ACTION_LABELS[action], () => {
           lockButtons();
@@ -258,28 +229,31 @@ export class ActionScene extends Phaser.Scene {
           } else if (action === 'interact') {
             runManualInteract();
           } else {
-            showResultThenContinue([resolveAction(action)]);
+            showResultThenContinue([resolveFindItem()]);
           }
         });
         buttons.push(btn);
       });
 
       const resolveOneRandom = (): RandomResult => {
-        const eligible = pool.filter((a) => a !== 'heal' || this.runState.items.xAttack > 0);
-        const action = eligible[Math.floor(Math.random() * eligible.length)];
+        const action = pool[Math.floor(Math.random() * pool.length)];
         if (action === 'catch') return { line: resolveCatchAuto() };
         if (action === 'interact') return resolveInteractAuto();
-        return { line: resolveAction(action) };
+        return { line: resolveFindItem() };
       };
 
-      const spinBtn = createButton(this, 400, 120 + pool.length * 55 + 20, 'Spin: 2 Random Rolls', () => {
-        lockButtons();
-        const result1 = resolveOneRandom();
-        const result2 = resolveOneRandom();
-        const evolutionOffer = result2.evolutionOffer ?? result1.evolutionOffer;
-        showResultThenContinue([result1.line, result2.line], evolutionOffer);
-      });
-      buttons.push(spinBtn);
+      if (pool.length > 1) {
+        // A single-action pool (e.g. a one-off legendary encounter) has nothing meaningful to
+        // randomize between — two rolls of the same action could double-resolve a one-time moment.
+        const spinBtn = createButton(this, 400, 120 + pool.length * 55 + 20, 'Spin: 2 Random Rolls', () => {
+          lockButtons();
+          const result1 = resolveOneRandom();
+          const result2 = resolveOneRandom();
+          const evolutionOffer = result2.evolutionOffer ?? result1.evolutionOffer;
+          showResultThenContinue([result1.line, result2.line], evolutionOffer);
+        });
+        buttons.push(spinBtn);
+      }
     });
   }
 }
