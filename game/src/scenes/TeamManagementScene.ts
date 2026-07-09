@@ -9,7 +9,8 @@ import { drawNeoBackground, drawPanel } from '../ui/background';
 import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
 import { EVOLUTIONS, EVOLUTION_WIN_THRESHOLD } from '../data/evolutions';
 import { XATTACK_BOOST } from '../data/items';
-import type { RunState, TeamMember } from '../data/types';
+import { computeBattleOdds } from '../battle/roulette';
+import type { RunState, TeamMember, BattleSpec } from '../data/types';
 
 const ICON_SIZE = 40;
 const OPPONENT_ICON_SIZE = 36;
@@ -32,6 +33,12 @@ function describeMember(member: TeamMember): string {
 export class TeamManagementScene extends Phaser.Scene {
   private runState!: RunState;
   private dynamicObjects: Phaser.GameObjects.GameObject[] = [];
+  private oddsObjects: Phaser.GameObjects.GameObject[] = [];
+  // Scene instances are reused by Phaser across visits (see main.ts's `scene: [...]` registration),
+  // so this must be reset in init() — a bare field initializer would only run once, ever.
+  private xAttacksQueued = 0;
+  private battle!: BattleSpec;
+  private oppPanelBottom = 0;
 
   constructor() {
     super('team-management');
@@ -39,11 +46,13 @@ export class TeamManagementScene extends Phaser.Scene {
 
   init(data: RunState) {
     this.runState = data;
+    this.xAttacksQueued = 0;
   }
 
   create() {
     const segment = SEGMENTS[this.runState.segmentIndex];
-    const battle = this.runState.adHocBattle ?? (segment.battles ?? [])[this.runState.battleSubIndex ?? 0];
+    this.battle = this.runState.adHocBattle ?? (segment.battles ?? [])[this.runState.battleSubIndex ?? 0];
+    const battle = this.battle;
     const locationLabel = this.runState.adHocBattle ? 'Trainer Encounter' : segment.name;
 
     drawNeoBackground(this, themeFor(segment.id));
@@ -83,30 +92,7 @@ export class TeamManagementScene extends Phaser.Scene {
         });
       });
 
-      const oppPanelBottom = 60 + 40 + battle.roster.length * ROW_HEIGHT + 10;
-      let xAttackControl: Phaser.GameObjects.Text | null = null;
-      const renderXAttackControl = () => {
-        xAttackControl?.destroy();
-        if (this.runState.items.xAttack > 0) {
-          xAttackControl = createButton(this, 655, oppPanelBottom + 40, `Use X-Attack (×${this.runState.items.xAttack})`, () => {
-            this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack - 1 };
-            this.runState.pendingBoost += XATTACK_BOOST;
-            renderXAttackControl();
-          });
-        } else {
-          xAttackControl = this.add
-            .text(655, oppPanelBottom + 40, 'X-Attack (none available)', {
-              fontFamily: FONT_BODY,
-              fontSize: '13px',
-              color: THEME.buttonDisabledText,
-              fontStyle: 'italic',
-              align: 'center',
-              wordWrap: { width: 200 },
-            })
-            .setOrigin(0.5);
-        }
-      };
-      renderXAttackControl();
+      this.oppPanelBottom = 60 + 40 + battle.roster.length * ROW_HEIGHT + 10;
 
       if (this.runState.mustChangeLeadFrom) {
         this.add
@@ -183,13 +169,14 @@ export class TeamManagementScene extends Phaser.Scene {
       this.dynamicObjects.push(icon, row);
 
       if (i > 0) {
-        const upBtn = createButton(this, 460, y + 8, 'Up', () => {
+        const topBtn = createButton(this, 460, y + 8, '↑ Top', () => {
           const team = [...this.runState.team];
-          [team[i - 1], team[i]] = [team[i], team[i - 1]];
+          const [moved] = team.splice(i, 1);
+          team.unshift(moved);
           this.runState = { ...this.runState, team };
           this.redrawTeam();
         });
-        this.dynamicObjects.push(upBtn);
+        this.dynamicObjects.push(topBtn);
       }
     });
 
@@ -224,5 +211,89 @@ export class TeamManagementScene extends Phaser.Scene {
       });
       this.dynamicObjects.push(swapBtn);
     });
+
+    this.redrawOddsPanel();
+  }
+
+  private redrawOddsPanel() {
+    this.oddsObjects.forEach((obj) => obj.destroy());
+    this.oddsObjects = [];
+
+    const oppPanelBottom = this.oppPanelBottom;
+
+    if (this.runState.items.xAttack > 0) {
+      const useBtn = createButton(
+        this,
+        655,
+        oppPanelBottom + 40,
+        `Use X-Attack (×${this.runState.items.xAttack})`,
+        () => {
+          this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack - 1 };
+          this.runState.pendingBoost += XATTACK_BOOST;
+          this.xAttacksQueued += 1;
+          this.redrawOddsPanel();
+        },
+      );
+      this.oddsObjects.push(useBtn);
+    } else {
+      this.oddsObjects.push(
+        this.add
+          .text(655, oppPanelBottom + 40, 'X-Attack (none available)', {
+            fontFamily: FONT_BODY,
+            fontSize: '13px',
+            color: THEME.buttonDisabledText,
+            fontStyle: 'italic',
+            align: 'center',
+            wordWrap: { width: 200 },
+          })
+          .setOrigin(0.5),
+      );
+    }
+
+    if (this.xAttacksQueued > 0) {
+      const undoBtn = createButton(this, 655, oppPanelBottom + 80, `Undo (×${this.xAttacksQueued})`, () => {
+        this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack + 1 };
+        this.runState.pendingBoost -= XATTACK_BOOST;
+        this.xAttacksQueued -= 1;
+        this.redrawOddsPanel();
+      });
+      this.oddsObjects.push(undoBtn);
+    }
+
+    const odds = computeBattleOdds(this.runState.team, this.battle, this.runState.pendingBoost);
+    const winPct = Math.round(odds.winProbability * 100);
+    const oddsPanelTop = oppPanelBottom + 110;
+
+    this.oddsObjects.push(drawPanel(this, 545, oddsPanelTop, 220, 70));
+    this.oddsObjects.push(
+      this.add
+        .text(655, oddsPanelTop + 18, `Matchup: ${odds.tier}`, {
+          fontFamily: FONT_BODY,
+          fontSize: '13px',
+          color: THEME.secondaryHex,
+        })
+        .setOrigin(0.5),
+    );
+
+    const barX = 555;
+    const barY = oddsPanelTop + 36;
+    const barWidth = 200;
+    const barHeight = 20;
+    const oddsBg = this.add.graphics();
+    oddsBg.fillStyle(THEME.danger, 0.35);
+    oddsBg.fillRoundedRect(barX, barY, barWidth, barHeight, 10);
+    const oddsFill = this.add.graphics();
+    oddsFill.fillStyle(THEME.success, 0.85);
+    oddsFill.fillRoundedRect(barX, barY, Math.max(16, (barWidth * winPct) / 100), barHeight, 10);
+    this.oddsObjects.push(oddsBg, oddsFill);
+    this.oddsObjects.push(
+      this.add
+        .text(655, barY + barHeight / 2, `Win ${winPct}% / Lose ${100 - winPct}%`, {
+          fontFamily: FONT_BODY,
+          fontSize: '12px',
+          color: THEME.text,
+        })
+        .setOrigin(0.5),
+    );
   }
 }
