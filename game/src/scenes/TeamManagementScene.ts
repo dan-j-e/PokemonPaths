@@ -12,8 +12,10 @@ import { XATTACK_BOOST } from '../data/items';
 import { computeBattleOdds } from '../battle/roulette';
 import type { RunState, TeamMember, BattleSpec } from '../data/types';
 
-const ICON_SIZE = 40;
-const OPPONENT_ICON_SIZE = 36;
+// Row icons must stay smaller than ROW_HEIGHT (and the compact-button height must too) or
+// adjacent rows visually overlap — verified via worst-case layout math, see plan history.
+const ICON_SIZE = 28;
+const OPPONENT_ICON_SIZE = 26;
 const ROW_HEIGHT = 32;
 
 function describe(species: string): string {
@@ -39,6 +41,7 @@ export class TeamManagementScene extends Phaser.Scene {
   private xAttackActive = false;
   private battle!: BattleSpec;
   private oppPanelBottom = 0;
+  private panelsTop = 60;
 
   constructor() {
     super('team-management');
@@ -65,8 +68,8 @@ export class TeamManagementScene extends Phaser.Scene {
     ];
 
     ensureSpeciesSprites(this, allSpecies, () => {
-      this.add
-        .text(400, 25, `${locationLabel}\nvs. ${battle.trainer}`, {
+      const titleText = this.add
+        .text(400, 22, `${locationLabel} vs. ${battle.trainer}`, {
           fontFamily: FONT_TITLE,
           fontSize: '18px',
           color: THEME.text,
@@ -75,14 +78,33 @@ export class TeamManagementScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      drawPanel(this, 545, 60, 220, 40 + battle.roster.length * ROW_HEIGHT + 10);
-      this.add.text(560, 70, 'Opponent Team', {
+      let headerBottom = titleText.y + titleText.height / 2;
+
+      if (this.runState.mustChangeLeadFrom) {
+        const infoText = this.add
+          .text(400, headerBottom + 12, `Potion used — reorder so ${this.runState.mustChangeLeadFrom} is no longer leading.`, {
+            fontFamily: FONT_BODY,
+            fontSize: '12px',
+            color: THEME.primaryHex,
+            align: 'center',
+            wordWrap: { width: 700 },
+          })
+          .setOrigin(0.5);
+        headerBottom = infoText.y + infoText.height / 2;
+      }
+
+      // Dynamic instead of a hardcoded 60 — keeps the panels clear of the title/info text above
+      // regardless of whether the title wraps to 2 lines or the potion-retry message is shown.
+      this.panelsTop = Math.max(60, headerBottom + 10);
+
+      drawPanel(this, 545, this.panelsTop, 220, 40 + battle.roster.length * ROW_HEIGHT + 10);
+      this.add.text(560, this.panelsTop + 10, 'Opponent Team', {
         fontFamily: FONT_BODY,
         fontSize: '14px',
         color: THEME.dangerHex,
       });
       battle.roster.forEach((species, i) => {
-        const y = 100 + i * ROW_HEIGHT;
+        const y = this.panelsTop + 40 + i * ROW_HEIGHT;
         this.add.image(578, y + 10, spriteKey(species)).setDisplaySize(OPPONENT_ICON_SIZE, OPPONENT_ICON_SIZE);
         this.add.text(602, y, describe(species), {
           fontFamily: FONT_BODY,
@@ -92,19 +114,7 @@ export class TeamManagementScene extends Phaser.Scene {
         });
       });
 
-      this.oppPanelBottom = 60 + 40 + battle.roster.length * ROW_HEIGHT + 10;
-
-      if (this.runState.mustChangeLeadFrom) {
-        this.add
-          .text(400, 50, `Potion used — reorder so ${this.runState.mustChangeLeadFrom} is no longer leading.`, {
-            fontFamily: FONT_BODY,
-            fontSize: '13px',
-            color: THEME.primaryHex,
-            align: 'center',
-            wordWrap: { width: 700 },
-          })
-          .setOrigin(0.5);
-      }
+      this.oppPanelBottom = this.panelsTop + 40 + battle.roster.length * ROW_HEIGHT + 10;
 
       this.redrawTeam();
 
@@ -118,11 +128,12 @@ export class TeamManagementScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      createButton(this, 400, 574, 'Continue to Battle', () => {
+      const continueBtn = createButton(this, 400, 574, 'Continue to Battle', () => {
         if (this.runState.mustChangeLeadFrom && this.runState.team[0].species === this.runState.mustChangeLeadFrom) {
           warningText.setText(`You must lead with a Pokemon other than ${this.runState.mustChangeLeadFrom}.`);
           return;
         }
+        continueBtn.setDisabled(true);
         this.scene.start('battle', { ...this.runState, mustChangeLeadFrom: undefined });
       });
     });
@@ -134,22 +145,22 @@ export class TeamManagementScene extends Phaser.Scene {
 
     const teamCount = this.runState.team.length;
     const benchCount = this.runState.bench.length;
-    const teamRowsStartY = 112;
-    const benchLabelY = teamRowsStartY + teamCount * ROW_HEIGHT + 10;
-    const benchRowsStartY = benchLabelY + 20;
+    const teamRowsStartY = this.panelsTop + 52;
+    const benchLabelY = teamRowsStartY + teamCount * ROW_HEIGHT + 6;
+    const benchRowsStartY = benchLabelY + 14;
     const contentBottomY = benchRowsStartY + benchCount * ROW_HEIGHT + (benchCount === 0 ? 10 : 0);
 
-    this.dynamicObjects.push(drawPanel(this, 20, 60, 505, contentBottomY - 60 + 10));
+    this.dynamicObjects.push(drawPanel(this, 20, this.panelsTop, 505, contentBottomY - this.panelsTop + 10));
 
     this.dynamicObjects.push(
-      this.add.text(40, 75, 'Your Team (top = lead)', {
+      this.add.text(40, this.panelsTop + 15, 'Your Team (top = lead)', {
         fontFamily: FONT_BODY,
         fontSize: '14px',
         color: THEME.successHex,
       }),
     );
     this.dynamicObjects.push(
-      this.add.text(40, 93, 'Reordering changes battle odds', {
+      this.add.text(40, this.panelsTop + 33, 'Reordering changes battle odds', {
         fontFamily: FONT_BODY,
         fontSize: '11px',
         fontStyle: 'italic',
@@ -169,13 +180,20 @@ export class TeamManagementScene extends Phaser.Scene {
       this.dynamicObjects.push(icon, row);
 
       if (i > 0) {
-        const topBtn = createButton(this, 460, y + 8, '↑ Top', () => {
-          const team = [...this.runState.team];
-          const [moved] = team.splice(i, 1);
-          team.unshift(moved);
-          this.runState = { ...this.runState, team };
-          this.redrawTeam();
-        });
+        const topBtn = createButton(
+          this,
+          460,
+          y + 8,
+          '↑ Top',
+          () => {
+            const team = [...this.runState.team];
+            const [moved] = team.splice(i, 1);
+            team.unshift(moved);
+            this.runState = { ...this.runState, team };
+            this.redrawTeam();
+          },
+          { compact: true },
+        );
         this.dynamicObjects.push(topBtn);
       }
     });
@@ -199,16 +217,23 @@ export class TeamManagementScene extends Phaser.Scene {
       });
       this.dynamicObjects.push(icon, row);
 
-      const swapBtn = createButton(this, 460, y + 8, 'Swap', () => {
-        const bench = [...this.runState.bench];
-        const team = [...this.runState.team];
-        const [incoming] = bench.splice(i, 1);
-        const [outgoing] = team.splice(team.length - 1, 1);
-        team.push(incoming);
-        bench.push(outgoing);
-        this.runState = { ...this.runState, team, bench };
-        this.redrawTeam();
-      });
+      const swapBtn = createButton(
+        this,
+        460,
+        y + 8,
+        'Swap',
+        () => {
+          const bench = [...this.runState.bench];
+          const team = [...this.runState.team];
+          const [incoming] = bench.splice(i, 1);
+          const [outgoing] = team.splice(team.length - 1, 1);
+          team.push(incoming);
+          bench.push(outgoing);
+          this.runState = { ...this.runState, team, bench };
+          this.redrawTeam();
+        },
+        { compact: true },
+      );
       this.dynamicObjects.push(swapBtn);
     });
 

@@ -10,6 +10,7 @@ import { generateRouteTrainer } from '../data/routeTrainers';
 import { computeBattleOdds, spinBattle } from '../battle/roulette';
 import { applyBattleWin, applyEvolution } from '../data/evolutions';
 import { createButton } from '../ui/button';
+import type { Button } from '../ui/button';
 import { drawProgressBar } from '../ui/progressBar';
 import { drawNeoBackground } from '../ui/background';
 import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
@@ -41,7 +42,7 @@ export class ActionScene extends Phaser.Scene {
   create() {
     const segment = SEGMENTS[this.runState.segmentIndex];
     const pool = segment.actionPool ?? [];
-    const buttons: Phaser.GameObjects.Text[] = [];
+    const buttons: Button[] = [];
 
     drawNeoBackground(this, themeFor(segment.id));
     drawProgressBar(this, this.runState.segmentIndex);
@@ -82,7 +83,7 @@ export class ActionScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      const lockButtons = () => buttons.forEach((b) => b.disableInteractive());
+      const lockButtons = () => buttons.forEach((b) => b.setDisabled(true));
 
       const addToTeam = (species: string): boolean => {
         if (this.runState.team.length + this.runState.bench.length >= MAX_TOTAL_ROSTER) {
@@ -100,6 +101,14 @@ export class ActionScene extends Phaser.Scene {
         this.scene.start('overworld', { ...this.runState, segmentIndex: this.runState.segmentIndex + 1 });
       };
 
+      const createContinueButton = (y: number, onDone: () => void) => {
+        const btn = createButton(this, 400, y, 'Continue', () => {
+          btn.setDisabled(true);
+          onDone();
+        });
+        return btn;
+      };
+
       const showEvolvePrompt = (offer: EvolutionOffer, onDone: () => void) => {
         const promptText = this.add
           .text(400, 480, `${offer.from} wants to evolve into ${offer.to}! Evolving changes its species and type.`, {
@@ -112,16 +121,16 @@ export class ActionScene extends Phaser.Scene {
           .setOrigin(0.5);
 
         const yesBtn = createButton(this, 320, 525, 'Yes', () => {
-          yesBtn.disableInteractive();
-          noBtn.disableInteractive();
+          yesBtn.destroy();
+          noBtn.destroy();
           this.runState.team = applyEvolution(this.runState.team, offer.memberIndex, offer.to);
           promptText.setText(`${offer.from} evolved into ${offer.to}!`);
-          createButton(this, 400, 565, 'Continue', onDone);
+          createContinueButton(565, onDone);
         });
         const noBtn = createButton(this, 480, 525, 'No', () => {
-          yesBtn.disableInteractive();
-          noBtn.disableInteractive();
-          createButton(this, 400, 565, 'Continue', onDone);
+          yesBtn.destroy();
+          noBtn.destroy();
+          createContinueButton(565, onDone);
         });
       };
 
@@ -130,7 +139,7 @@ export class ActionScene extends Phaser.Scene {
         if (evolutionOffer) {
           showEvolvePrompt(evolutionOffer, advance);
         } else {
-          createButton(this, 400, 560, 'Continue', advance);
+          createContinueButton(560, advance);
         }
       };
 
@@ -169,7 +178,7 @@ export class ActionScene extends Phaser.Scene {
         resultText.setText(`A wild ${species} appeared!\nCatch chance: ${Math.round(chance * 100)}%`);
 
         const throwBtn = createButton(this, 400, 500, 'Throw a Poke Ball', () => {
-          throwBtn.disableInteractive();
+          throwBtn.destroy();
           const success = Math.random() < chance;
           if (success) {
             const added = addToTeam(species);

@@ -29,7 +29,8 @@ export class VictoryScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    createButton(this, 400, 400, 'Restart', () => {
+    const restartBtn = createButton(this, 400, 400, 'Restart', () => {
+      restartBtn.setDisabled(true);
       this.scene.start('starter-select');
     });
   }

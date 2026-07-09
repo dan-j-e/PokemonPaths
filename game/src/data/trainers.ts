@@ -103,7 +103,9 @@ export const MARS_4: BattleSpec = {
 };
 export const JUPITER_3: BattleSpec = {
   trainer: 'Commander Jupiter',
-  roster: ['Bronzor', 'Skuntank'],
+  // Golbat evolves to Crobat between appearances, matching Cyrus's roster (Golbat->Crobat) and
+  // Mars's roster staying stable — was previously missing this member entirely (data bug).
+  roster: ['Crobat', 'Bronzor', 'Skuntank'],
   runEnding: false,
   tier: 2,
 };

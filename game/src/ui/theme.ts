@@ -25,6 +25,7 @@ export const THEME = {
 
   buttonFill: 0xedeaf7,
   buttonHoverFill: 0xddd2f2,
+  buttonPressedFill: 0xcfc0ec,
   buttonDisabledFill: 0xf0eef6,
   buttonDisabledFillHex: '#f0eef6',
   buttonDisabledText: '#b9b5cc',

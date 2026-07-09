@@ -38,7 +38,8 @@ export class OverworldScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    createButton(this, 400, 350, 'Continue', () => {
+    const continueBtn = createButton(this, 400, 350, 'Continue', () => {
+      continueBtn.setDisabled(true);
       if (segment.kind === 'battle') {
         this.scene.start('team-management', { ...this.runState, battleSubIndex: 0 });
       } else {

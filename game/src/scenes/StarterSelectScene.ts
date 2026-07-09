@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { createButton } from '../ui/button';
+import type { Button } from '../ui/button';
 import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
 import { emptyInventory } from '../data/items';
 import { drawNeoBackground } from '../ui/background';
@@ -25,13 +26,16 @@ export class StarterSelectScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     ensureSpeciesSprites(this, STARTERS, () => {
+      const pickButtons: Button[] = [];
+
       STARTERS.forEach((starter, i) => {
         const x = 200 + i * 200;
 
         // 96px native PokeAPI sprite doubled for a crisp, sizeable hero image (pixelArt:true keeps it sharp).
         this.add.image(x, 240, spriteKey(starter)).setDisplaySize(192, 192);
 
-        createButton(this, x, 370, starter, () => {
+        const btn = createButton(this, x, 370, starter, () => {
+          pickButtons.forEach((b) => b.setDisabled(true));
           this.scene.start('overworld', {
             segmentIndex: 0,
             starter,
@@ -42,6 +46,7 @@ export class StarterSelectScene extends Phaser.Scene {
             hasExpShare: false,
           });
         });
+        pickButtons.push(btn);
       });
     });
   }

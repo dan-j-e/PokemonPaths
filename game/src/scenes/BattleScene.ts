@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { SEGMENTS } from '../data/segments';
 import { computeBattleOdds, spinBattle } from '../battle/roulette';
 import { createButton } from '../ui/button';
+import type { Button } from '../ui/button';
 import { ensureSpeciesSprites, ensureBackSpeciesSprites, spriteKey, backSpriteKey } from '../data/sprites';
 import { themeFor } from '../data/locationThemes';
 import { drawProgressBar } from '../ui/progressBar';
@@ -212,15 +213,28 @@ export class BattleScene extends Phaser.Scene {
           }
         };
 
+        const createContinueButton = (y: number) => {
+          const btn = createButton(this, 400, y, 'Continue', () => {
+            btn.setDisabled(true);
+            advanceToNext();
+          });
+          return btn;
+        };
+
         const showLossOptions = () => {
           resultText.setText('You lost...');
           let y = 478;
+          const lossButtons: Button[] = [];
+          const disableLossButtons = () => lossButtons.forEach((b) => b.setDisabled(true));
 
           if (stateAfterBoost.items.revive > 0) {
-            createButton(this, 400, y, `Use Revive (x${stateAfterBoost.items.revive}) — retry, same lead`, () => {
-              const items = { ...stateAfterBoost.items, revive: stateAfterBoost.items.revive - 1 };
-              this.scene.start('battle', { ...stateAfterBoost, items });
-            });
+            lossButtons.push(
+              createButton(this, 400, y, `Use Revive (x${stateAfterBoost.items.revive}) — retry, same lead`, () => {
+                disableLossButtons();
+                const items = { ...stateAfterBoost.items, revive: stateAfterBoost.items.revive - 1 };
+                this.scene.start('battle', { ...stateAfterBoost, items });
+              }),
+            );
             y += 38;
           }
 
@@ -228,16 +242,22 @@ export class BattleScene extends Phaser.Scene {
           // demand a lead change TeamManagementScene has no way to satisfy (a soft-lock).
           const canChangeLead = stateAfterBoost.team.length > 1 || stateAfterBoost.bench.length > 0;
           if (stateAfterBoost.items.potion > 0 && canChangeLead) {
-            createButton(this, 400, y, `Use Potion (x${stateAfterBoost.items.potion}) — retry, change lead`, () => {
-              const items = { ...stateAfterBoost.items, potion: stateAfterBoost.items.potion - 1 };
-              this.scene.start('team-management', { ...stateAfterBoost, items, mustChangeLeadFrom: playerLead });
-            });
+            lossButtons.push(
+              createButton(this, 400, y, `Use Potion (x${stateAfterBoost.items.potion}) — retry, change lead`, () => {
+                disableLossButtons();
+                const items = { ...stateAfterBoost.items, potion: stateAfterBoost.items.potion - 1 };
+                this.scene.start('team-management', { ...stateAfterBoost, items, mustChangeLeadFrom: playerLead });
+              }),
+            );
             y += 38;
           }
 
-          createButton(this, 400, y, 'Give up', () => {
-            this.scene.start('game-over', { location: segment.name, trainer: battle.trainer });
-          });
+          lossButtons.push(
+            createButton(this, 400, y, 'Give up', () => {
+              disableLossButtons();
+              this.scene.start('game-over', { location: segment.name, trainer: battle.trainer });
+            }),
+          );
         };
 
         const showEvolvePrompt = (offer: EvolutionOffer) => {
@@ -252,21 +272,21 @@ export class BattleScene extends Phaser.Scene {
             .setOrigin(0.5);
 
           const yesBtn = createButton(this, 320, 520, 'Yes', () => {
-            yesBtn.disableInteractive();
-            noBtn.disableInteractive();
+            yesBtn.destroy();
+            noBtn.destroy();
             stateAfterBoost.team = applyEvolution(stateAfterBoost.team, offer.memberIndex, offer.to);
             promptText.setText(`${offer.from} evolved into ${offer.to}!`);
-            createButton(this, 400, 558, 'Continue', advanceToNext);
+            createContinueButton(558);
           });
           const noBtn = createButton(this, 480, 520, 'No', () => {
-            yesBtn.disableInteractive();
-            noBtn.disableInteractive();
-            createButton(this, 400, 558, 'Continue', advanceToNext);
+            yesBtn.destroy();
+            noBtn.destroy();
+            createContinueButton(558);
           });
         };
 
         const spinBtn = createButton(this, 400, 438, 'Spin', () => {
-          spinBtn.disableInteractive();
+          spinBtn.destroy();
           const won = spinBattle(odds);
 
           if (won) {
@@ -301,7 +321,7 @@ export class BattleScene extends Phaser.Scene {
             if (result.evolutionOffer) {
               showEvolvePrompt(result.evolutionOffer);
             } else {
-              createButton(this, 400, 478, 'Continue', advanceToNext);
+              createContinueButton(478);
             }
           } else if (battle.runEnding) {
             this.tweens.add({
@@ -321,7 +341,7 @@ export class BattleScene extends Phaser.Scene {
               ease: 'Quad.easeIn',
             });
             resultText.setText('You lost, but no penalty.');
-            createButton(this, 400, 478, 'Continue', advanceToNext);
+            createContinueButton(478);
           }
         });
       });
