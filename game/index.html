@@ -12,6 +12,10 @@
     />
     <style>
       html, body { margin: 0; padding: 0; background: #f6f4fb; }
+      /* The game canvas's width/height attributes are set to a DPR-multiplied backing-store size
+         (see main.ts) for crisp HiDPI rendering — this pins its on-page CSS size back to the
+         logical 800x600 regardless of that backing-store resolution. */
+      canvas { width: 800px; height: 600px; }
     </style>
   </head>
   <body>
