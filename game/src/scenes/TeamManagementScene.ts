@@ -160,7 +160,7 @@ export class TeamManagementScene extends Phaser.Scene {
       }),
     );
     this.dynamicObjects.push(
-      this.add.text(40, this.panelsTop + 33, 'Reordering changes battle odds', {
+      this.add.text(40, this.panelsTop + 33, 'Reordering changes odds', {
         fontFamily: FONT_BODY,
         fontSize: '11px',
         fontStyle: 'italic',
@@ -247,7 +247,7 @@ export class TeamManagementScene extends Phaser.Scene {
     const oppPanelBottom = this.oppPanelBottom;
 
     if (this.xAttackActive) {
-      const cancelBtn = createButton(this, 655, oppPanelBottom + 40, 'X-Attack: ON (tap to cancel)', () => {
+      const cancelBtn = createButton(this, 655, oppPanelBottom + 40, 'X-Attack: ON', () => {
         this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack + 1 };
         this.runState.pendingBoost -= XATTACK_BOOST;
         this.xAttackActive = false;

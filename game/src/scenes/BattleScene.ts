@@ -174,16 +174,6 @@ export class BattleScene extends Phaser.Scene {
           })
           .setOrigin(0.5);
 
-        this.add
-          .text(400, 362, "Only your lead Pokemon's matchup counts — reorder in Team Management", {
-            fontFamily: FONT_BODY,
-            fontSize: '11px',
-            fontStyle: 'italic',
-            color: THEME.textMuted,
-            align: 'center',
-          })
-          .setOrigin(0.5);
-
         const resultText = this.add
           .text(400, 400, '', {
             fontFamily: FONT_BODY,
@@ -229,7 +219,7 @@ export class BattleScene extends Phaser.Scene {
 
           if (stateAfterBoost.items.revive > 0) {
             lossButtons.push(
-              createButton(this, 400, y, `Use Revive (x${stateAfterBoost.items.revive}) — retry, same lead`, () => {
+              createButton(this, 400, y, `Use Revive (×${stateAfterBoost.items.revive})`, () => {
                 disableLossButtons();
                 const items = { ...stateAfterBoost.items, revive: stateAfterBoost.items.revive - 1 };
                 this.scene.start('battle', { ...stateAfterBoost, items });
@@ -243,7 +233,7 @@ export class BattleScene extends Phaser.Scene {
           const canChangeLead = stateAfterBoost.team.length > 1 || stateAfterBoost.bench.length > 0;
           if (stateAfterBoost.items.potion > 0 && canChangeLead) {
             lossButtons.push(
-              createButton(this, 400, y, `Use Potion (x${stateAfterBoost.items.potion}) — retry, change lead`, () => {
+              createButton(this, 400, y, `Use Potion (×${stateAfterBoost.items.potion})`, () => {
                 disableLossButtons();
                 const items = { ...stateAfterBoost.items, potion: stateAfterBoost.items.potion - 1 };
                 this.scene.start('team-management', { ...stateAfterBoost, items, mustChangeLeadFrom: playerLead });
@@ -262,7 +252,7 @@ export class BattleScene extends Phaser.Scene {
 
         const showEvolvePrompt = (offer: EvolutionOffer) => {
           const promptText = this.add
-            .text(400, 478, `${offer.from} wants to evolve into ${offer.to}! Evolving changes its species and type.`, {
+            .text(400, 478, `${offer.from} wants to evolve into ${offer.to}?`, {
               fontFamily: FONT_BODY,
               fontSize: '16px',
               color: THEME.secondaryHex,
@@ -295,7 +285,7 @@ export class BattleScene extends Phaser.Scene {
             let winMessage = 'You won!';
             if (segment.id === 'pastoria-city-gym4' && !stateAfterBoost.hasExpShare) {
               stateAfterBoost.hasExpShare = true;
-              winMessage += '\nYou received an EXP Share! The rest of your party now gains partial progress from every win.';
+              winMessage += '\nYou received an EXP Share!';
             }
             resultText.setText(winMessage);
 

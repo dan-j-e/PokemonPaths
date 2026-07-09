@@ -111,7 +111,7 @@ export class ActionScene extends Phaser.Scene {
 
       const showEvolvePrompt = (offer: EvolutionOffer, onDone: () => void) => {
         const promptText = this.add
-          .text(400, 480, `${offer.from} wants to evolve into ${offer.to}! Evolving changes its species and type.`, {
+          .text(400, 480, `${offer.from} wants to evolve into ${offer.to}?`, {
             fontFamily: FONT_BODY,
             fontSize: '16px',
             color: THEME.secondaryHex,
