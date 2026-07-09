@@ -12,10 +12,15 @@ import { applyBattleWin, applyEvolution } from '../data/evolutions';
 import type { EvolutionOffer } from '../data/evolutions';
 import type { RunState } from '../data/types';
 
-const OPPONENT_ICON_SIZE = 24;
-const OPPONENT_ICON_SPACING = 27;
-const OPPONENT_ICON_ROW_CAPACITY = 6;
-const OPPONENT_ICON_ROW_HEIGHT = 28;
+// Non-lead roster preview: lead is the big front sprite above; the rest are arranged in a
+// pyramid — up to 3 per row, centered independently, filling top row first (e.g. 5 members ->
+// 3 on top, 2 below).
+const NON_LEAD_ICON_SIZE = 34;
+const NON_LEAD_ROW_CAPACITY = 3;
+const NON_LEAD_COL_SPACING = 40;
+const NON_LEAD_ROW_HEIGHT = 38;
+const NON_LEAD_GRID_START_Y = 176;
+const NON_LEAD_CENTER_X = 616;
 
 export class BattleScene extends Phaser.Scene {
   private runState!: RunState;
@@ -73,14 +78,15 @@ export class BattleScene extends Phaser.Scene {
           })
           .setOrigin(0.5);
 
-        battle.roster.forEach((species, i) => {
-          const row = Math.floor(i / OPPONENT_ICON_ROW_CAPACITY);
-          const col = i % OPPONENT_ICON_ROW_CAPACITY;
-          const rowCount = Math.min(OPPONENT_ICON_ROW_CAPACITY, battle.roster.length - row * OPPONENT_ICON_ROW_CAPACITY);
-          const rowStartX = 616 - ((rowCount - 1) * OPPONENT_ICON_SPACING) / 2;
-          const x = rowStartX + col * OPPONENT_ICON_SPACING;
-          const y = 168 + row * OPPONENT_ICON_ROW_HEIGHT;
-          this.add.image(x, y, spriteKey(species)).setDisplaySize(OPPONENT_ICON_SIZE, OPPONENT_ICON_SIZE);
+        const nonLeadRoster = battle.roster.slice(1);
+        nonLeadRoster.forEach((species, i) => {
+          const row = Math.floor(i / NON_LEAD_ROW_CAPACITY);
+          const col = i % NON_LEAD_ROW_CAPACITY;
+          const itemsInRow = Math.min(NON_LEAD_ROW_CAPACITY, nonLeadRoster.length - row * NON_LEAD_ROW_CAPACITY);
+          const rowStartX = NON_LEAD_CENTER_X - ((itemsInRow - 1) * NON_LEAD_COL_SPACING) / 2;
+          const x = rowStartX + col * NON_LEAD_COL_SPACING;
+          const y = NON_LEAD_GRID_START_Y + row * NON_LEAD_ROW_HEIGHT;
+          this.add.image(x, y, spriteKey(species)).setDisplaySize(NON_LEAD_ICON_SIZE, NON_LEAD_ICON_SIZE);
         });
 
         // Entrance: both sprites slide in and fade in, opponent staggered slightly after the player.
@@ -213,7 +219,7 @@ export class BattleScene extends Phaser.Scene {
 
         const showLossOptions = () => {
           resultText.setText('You lost...');
-          let y = 478;
+          let y = 460;
           const lossButtons: Button[] = [];
           const disableLossButtons = () => lossButtons.forEach((b) => b.setDisabled(true));
 
@@ -225,7 +231,7 @@ export class BattleScene extends Phaser.Scene {
                 this.scene.start('battle', { ...stateAfterBoost, items });
               }),
             );
-            y += 38;
+            y += 52;
           }
 
           // Only offer a lead change if one is actually possible — otherwise this would
@@ -239,7 +245,7 @@ export class BattleScene extends Phaser.Scene {
                 this.scene.start('team-management', { ...stateAfterBoost, items, mustChangeLeadFrom: playerLead });
               }),
             );
-            y += 38;
+            y += 52;
           }
 
           lossButtons.push(
@@ -261,17 +267,17 @@ export class BattleScene extends Phaser.Scene {
             })
             .setOrigin(0.5);
 
-          const yesBtn = createButton(this, 320, 520, 'Yes', () => {
+          const yesBtn = createButton(this, 220, 518, 'Yes', () => {
             yesBtn.destroy();
             noBtn.destroy();
             stateAfterBoost.team = applyEvolution(stateAfterBoost.team, offer.memberIndex, offer.to);
             promptText.setText(`${offer.from} evolved into ${offer.to}!`);
-            createContinueButton(558);
+            createContinueButton(574);
           });
-          const noBtn = createButton(this, 480, 520, 'No', () => {
+          const noBtn = createButton(this, 580, 518, 'No', () => {
             yesBtn.destroy();
             noBtn.destroy();
-            createContinueButton(558);
+            createContinueButton(574);
           });
         };
 

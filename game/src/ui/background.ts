@@ -34,7 +34,7 @@ export function drawPanel(
   panel.fillRoundedRect(x, y + 3, width, height, 18);
   panel.fillStyle(0xffffff, alpha);
   panel.fillRoundedRect(x, y, width, height, 16);
-  panel.lineStyle(1, THEME.buttonFill, 0.8);
+  panel.lineStyle(1, THEME.buttonDisabledFill, 0.8);
   panel.strokeRoundedRect(x, y, width, height, 16);
   return panel;
 }

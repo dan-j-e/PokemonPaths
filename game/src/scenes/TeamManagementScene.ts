@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { SEGMENTS } from '../data/segments';
 import { getSpecies } from '../data/species';
 import { createButton } from '../ui/button';
+import type { Button } from '../ui/button';
 import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
 import { themeFor } from '../data/locationThemes';
 import { drawProgressBar } from '../ui/progressBar';
@@ -12,11 +13,15 @@ import { XATTACK_BOOST } from '../data/items';
 import { computeBattleOdds } from '../battle/roulette';
 import type { RunState, TeamMember, BattleSpec } from '../data/types';
 
-// Row icons must stay smaller than ROW_HEIGHT (and the compact-button height must too) or
-// adjacent rows visually overlap — verified via worst-case layout math, see plan history.
-const ICON_SIZE = 28;
-const OPPONENT_ICON_SIZE = 26;
-const ROW_HEIGHT = 32;
+// Active team gets the biggest icons (always <=6, guaranteed to fit); bench stays compact since
+// it's reserve, not the emphasis. Icon size must stay under its row height or adjacent rows
+// visually overlap — verified via worst-case (6 team + 6 bench + 6 opponent) layout math.
+const ACTIVE_ICON_SIZE = 36;
+const ACTIVE_ROW_HEIGHT = 40;
+const BENCH_ICON_SIZE = 22;
+const BENCH_ROW_HEIGHT = 24;
+const OPPONENT_ICON_SIZE = 40;
+const OPPONENT_ROW_HEIGHT = 44;
 
 function describe(species: string): string {
   const s = getSpecies(species);
@@ -39,6 +44,7 @@ export class TeamManagementScene extends Phaser.Scene {
   // Scene instances are reused by Phaser across visits (see main.ts's `scene: [...]` registration),
   // so this must be reset in init() — a bare field initializer would only run once, ever.
   private xAttackActive = false;
+  private xAttackButton: Button | null = null;
   private battle!: BattleSpec;
   private oppPanelBottom = 0;
   private panelsTop = 60;
@@ -97,15 +103,15 @@ export class TeamManagementScene extends Phaser.Scene {
       // regardless of whether the title wraps to 2 lines or the potion-retry message is shown.
       this.panelsTop = Math.max(60, headerBottom + 10);
 
-      drawPanel(this, 545, this.panelsTop, 220, 40 + battle.roster.length * ROW_HEIGHT + 10);
+      drawPanel(this, 545, this.panelsTop, 220, 40 + battle.roster.length * OPPONENT_ROW_HEIGHT + 10);
       this.add.text(560, this.panelsTop + 10, 'Opponent Team', {
         fontFamily: FONT_BODY,
         fontSize: '14px',
         color: THEME.dangerHex,
       });
       battle.roster.forEach((species, i) => {
-        const y = this.panelsTop + 40 + i * ROW_HEIGHT;
-        this.add.image(578, y + 10, spriteKey(species)).setDisplaySize(OPPONENT_ICON_SIZE, OPPONENT_ICON_SIZE);
+        const y = this.panelsTop + 40 + i * OPPONENT_ROW_HEIGHT;
+        this.add.image(578, y + 12, spriteKey(species)).setDisplaySize(OPPONENT_ICON_SIZE, OPPONENT_ICON_SIZE);
         this.add.text(602, y, describe(species), {
           fontFamily: FONT_BODY,
           fontSize: '13px',
@@ -114,12 +120,12 @@ export class TeamManagementScene extends Phaser.Scene {
         });
       });
 
-      this.oppPanelBottom = this.panelsTop + 40 + battle.roster.length * ROW_HEIGHT + 10;
+      this.oppPanelBottom = this.panelsTop + 40 + battle.roster.length * OPPONENT_ROW_HEIGHT + 10;
 
       this.redrawTeam();
 
       const warningText = this.add
-        .text(400, 542, '', {
+        .text(400, 518, '', {
           fontFamily: FONT_BODY,
           fontSize: '13px',
           color: THEME.dangerHex,
@@ -128,7 +134,9 @@ export class TeamManagementScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
 
-      const continueBtn = createButton(this, 400, 574, 'Continue to Battle', () => {
+      this.redrawXAttackButton();
+
+      const continueBtn = createButton(this, 600, 556, 'Continue to Battle', () => {
         if (this.runState.mustChangeLeadFrom && this.runState.team[0].species === this.runState.mustChangeLeadFrom) {
           warningText.setText(`You must lead with a Pokemon other than ${this.runState.mustChangeLeadFrom}.`);
           return;
@@ -139,16 +147,41 @@ export class TeamManagementScene extends Phaser.Scene {
     });
   }
 
+  private redrawXAttackButton() {
+    this.xAttackButton?.destroy();
+    this.xAttackButton = null;
+
+    if (this.xAttackActive) {
+      this.xAttackButton = createButton(this, 200, 556, 'X-Attack: ON', () => {
+        this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack + 1 };
+        this.runState.pendingBoost -= XATTACK_BOOST;
+        this.xAttackActive = false;
+        this.redrawXAttackButton();
+        this.redrawOddsPanel();
+      });
+    } else if (this.runState.items.xAttack > 0) {
+      this.xAttackButton = createButton(this, 200, 556, `Use X-Attack (×${this.runState.items.xAttack})`, () => {
+        this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack - 1 };
+        this.runState.pendingBoost += XATTACK_BOOST;
+        this.xAttackActive = true;
+        this.redrawXAttackButton();
+        this.redrawOddsPanel();
+      });
+    } else {
+      this.xAttackButton = createButton(this, 200, 556, 'X-Attack (none available)', () => {}, { disabled: true });
+    }
+  }
+
   private redrawTeam() {
     this.dynamicObjects.forEach((obj) => obj.destroy());
     this.dynamicObjects = [];
 
     const teamCount = this.runState.team.length;
     const benchCount = this.runState.bench.length;
-    const teamRowsStartY = this.panelsTop + 52;
-    const benchLabelY = teamRowsStartY + teamCount * ROW_HEIGHT + 6;
-    const benchRowsStartY = benchLabelY + 14;
-    const contentBottomY = benchRowsStartY + benchCount * ROW_HEIGHT + (benchCount === 0 ? 10 : 0);
+    const teamRowsStartY = this.panelsTop + 30;
+    const benchLabelY = teamRowsStartY + teamCount * ACTIVE_ROW_HEIGHT + 4;
+    const benchRowsStartY = benchLabelY + 12;
+    const contentBottomY = benchRowsStartY + benchCount * BENCH_ROW_HEIGHT + (benchCount === 0 ? 10 : 0);
 
     this.dynamicObjects.push(drawPanel(this, 20, this.panelsTop, 505, contentBottomY - this.panelsTop + 10));
 
@@ -159,23 +192,15 @@ export class TeamManagementScene extends Phaser.Scene {
         color: THEME.successHex,
       }),
     );
-    this.dynamicObjects.push(
-      this.add.text(40, this.panelsTop + 33, 'Reordering changes odds', {
-        fontFamily: FONT_BODY,
-        fontSize: '11px',
-        fontStyle: 'italic',
-        color: THEME.textMuted,
-      }),
-    );
 
     this.runState.team.forEach((member, i) => {
-      const y = teamRowsStartY + i * ROW_HEIGHT;
-      const icon = this.add.image(60, y + 8, spriteKey(member.species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
-      const row = this.add.text(88, y, `${i + 1}. ${describeMember(member)}`, {
+      const y = teamRowsStartY + i * ACTIVE_ROW_HEIGHT;
+      const icon = this.add.image(64, y + 10, spriteKey(member.species)).setDisplaySize(ACTIVE_ICON_SIZE, ACTIVE_ICON_SIZE);
+      const row = this.add.text(96, y, `${i + 1}. ${describeMember(member)}`, {
         fontFamily: FONT_BODY,
         fontSize: '13px',
         color: THEME.text,
-        wordWrap: { width: 340 },
+        wordWrap: { width: 320 },
       });
       this.dynamicObjects.push(icon, row);
 
@@ -183,7 +208,7 @@ export class TeamManagementScene extends Phaser.Scene {
         const topBtn = createButton(
           this,
           460,
-          y + 8,
+          y + 10,
           '↑ Top',
           () => {
             const team = [...this.runState.team];
@@ -207,13 +232,13 @@ export class TeamManagementScene extends Phaser.Scene {
     );
 
     this.runState.bench.forEach((member, i) => {
-      const y = benchRowsStartY + i * ROW_HEIGHT;
-      const icon = this.add.image(60, y + 8, spriteKey(member.species)).setDisplaySize(ICON_SIZE, ICON_SIZE);
+      const y = benchRowsStartY + i * BENCH_ROW_HEIGHT;
+      const icon = this.add.image(60, y + 8, spriteKey(member.species)).setDisplaySize(BENCH_ICON_SIZE, BENCH_ICON_SIZE);
       const row = this.add.text(88, y, describeMember(member), {
         fontFamily: FONT_BODY,
-        fontSize: '13px',
+        fontSize: '12px',
         color: THEME.textMuted,
-        wordWrap: { width: 340 },
+        wordWrap: { width: 300 },
       });
       this.dynamicObjects.push(icon, row);
 
@@ -246,40 +271,9 @@ export class TeamManagementScene extends Phaser.Scene {
 
     const oppPanelBottom = this.oppPanelBottom;
 
-    if (this.xAttackActive) {
-      const cancelBtn = createButton(this, 655, oppPanelBottom + 40, 'X-Attack: ON', () => {
-        this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack + 1 };
-        this.runState.pendingBoost -= XATTACK_BOOST;
-        this.xAttackActive = false;
-        this.redrawOddsPanel();
-      });
-      this.oddsObjects.push(cancelBtn);
-    } else if (this.runState.items.xAttack > 0) {
-      const useBtn = createButton(this, 655, oppPanelBottom + 40, `Use X-Attack (×${this.runState.items.xAttack})`, () => {
-        this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack - 1 };
-        this.runState.pendingBoost += XATTACK_BOOST;
-        this.xAttackActive = true;
-        this.redrawOddsPanel();
-      });
-      this.oddsObjects.push(useBtn);
-    } else {
-      this.oddsObjects.push(
-        this.add
-          .text(655, oppPanelBottom + 40, 'X-Attack (none available)', {
-            fontFamily: FONT_BODY,
-            fontSize: '13px',
-            color: THEME.buttonDisabledText,
-            fontStyle: 'italic',
-            align: 'center',
-            wordWrap: { width: 200 },
-          })
-          .setOrigin(0.5),
-      );
-    }
-
     const odds = computeBattleOdds(this.runState.team, this.battle, this.runState.pendingBoost);
     const winPct = Math.round(odds.winProbability * 100);
-    const oddsPanelTop = oppPanelBottom + 80;
+    const oddsPanelTop = oppPanelBottom + 20;
 
     this.oddsObjects.push(drawPanel(this, 545, oddsPanelTop, 220, 70));
     this.oddsObjects.push(
