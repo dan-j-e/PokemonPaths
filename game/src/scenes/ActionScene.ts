@@ -120,18 +120,32 @@ export class ActionScene extends Phaser.Scene {
           })
           .setOrigin(0.5);
 
-        const yesBtn = createButton(this, 220, 520, 'Yes', () => {
-          yesBtn.destroy();
-          noBtn.destroy();
-          this.runState.team = applyEvolution(this.runState.team, offer.memberIndex, offer.to);
-          promptText.setText(`${offer.from} evolved into ${offer.to}!`);
-          createContinueButton(574, onDone);
-        });
-        const noBtn = createButton(this, 580, 520, 'No', () => {
-          yesBtn.destroy();
-          noBtn.destroy();
-          createContinueButton(574, onDone);
-        });
+        const yesBtn = createButton(
+          this,
+          340,
+          520,
+          'Yes',
+          () => {
+            yesBtn.destroy();
+            noBtn.destroy();
+            this.runState.team = applyEvolution(this.runState.team, offer.memberIndex, offer.to);
+            promptText.setText(`${offer.from} evolved into ${offer.to}!`);
+            createContinueButton(568, onDone);
+          },
+          { size: 'small' },
+        );
+        const noBtn = createButton(
+          this,
+          460,
+          520,
+          'No',
+          () => {
+            yesBtn.destroy();
+            noBtn.destroy();
+            createContinueButton(568, onDone);
+          },
+          { size: 'small' },
+        );
       };
 
       const showResultThenContinue = (lines: string[], evolutionOffer?: EvolutionOffer) => {

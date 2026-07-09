@@ -55,13 +55,17 @@ export class StarterSelectScene extends Phaser.Scene {
           .setInteractive({ useHandCursor: true })
           .on('pointerover', () => {
             if (selected) return;
-            glow.setFillStyle(THEME.primary, 0.16);
-            this.tweens.add({ targets: [portrait, glow], scale: 1.05, duration: 120, ease: 'Quad.easeOut' });
+            portrait.setDepth(1); // pop above neighbors while enlarged, regardless of draw order
+            glow.setFillStyle(THEME.primary, 0.2);
+            this.tweens.add({ targets: portrait, scale: 1.2, y: 228, duration: 180, ease: 'Back.easeOut' });
+            this.tweens.add({ targets: glow, scale: 1.15, y: 228, duration: 180, ease: 'Back.easeOut' });
           })
           .on('pointerout', () => {
             if (selected) return;
+            portrait.setDepth(0);
             glow.setFillStyle(THEME.primary, 0.08);
-            this.tweens.add({ targets: [portrait, glow], scale: 1, duration: 120, ease: 'Quad.easeOut' });
+            this.tweens.add({ targets: portrait, scale: 1, y: 240, duration: 150, ease: 'Quad.easeOut' });
+            this.tweens.add({ targets: glow, scale: 1, y: 240, duration: 150, ease: 'Quad.easeOut' });
           })
           .on('pointerdown', () => {
             selected = true;

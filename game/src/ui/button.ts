@@ -1,45 +1,49 @@
 import Phaser from 'phaser';
 import { THEME, FONT_BODY } from './theme';
 
-// Fixed pill dimensions — every button of a given size looks identical regardless of label length.
-// 340px comfortably fits the longest label used anywhere ("Search for a wild Pokemon", 25 chars)
-// at 20px with margin to spare for dynamic count suffixes like "(×99)".
+// Fixed pill dimensions per size tier — every button of a given tier looks identical regardless
+// of label length. 340px (normal) comfortably fits the longest label used anywhere ("Search for
+// a wild Pokemon", 25 chars) at 20px with margin to spare for dynamic count suffixes like "(×99)".
 const NORMAL_WIDTH = 340;
 const NORMAL_HEIGHT = 48;
 const NORMAL_RADIUS = NORMAL_HEIGHT / 2;
 const NORMAL_FONT_SIZE = 20;
 
-// Compact sizing for dense list rows (party reorder/swap actions only), where even the smallest
-// full-size pill would exceed typical row spacing and overlap its neighbors.
+// Small: short binary-choice labels (Yes/No) that sit side by side — a normal-size pill would
+// force them ~360px apart, turning a quick either/or tap into a long mouse trip.
+const SMALL_WIDTH = 110;
+const SMALL_HEIGHT = 44;
+const SMALL_RADIUS = SMALL_HEIGHT / 2;
+const SMALL_FONT_SIZE = 18;
+
+// Compact: dense list rows (party reorder/swap actions only), where even Small would exceed
+// typical row spacing and overlap its neighbors.
 const COMPACT_WIDTH = 64;
 const COMPACT_HEIGHT = 22;
 const COMPACT_RADIUS = COMPACT_HEIGHT / 2;
 const COMPACT_FONT_SIZE = 12;
 
+export type ButtonSize = 'normal' | 'small' | 'compact';
+
 export interface ButtonOptions {
   disabled?: boolean;
-  compact?: boolean;
+  size?: ButtonSize;
 }
 
 export type Button = Phaser.GameObjects.Text & { setDisabled: (disabled: boolean) => void };
-
-function paintGradient(
-  g: Phaser.GameObjects.Graphics,
-  width: number,
-  height: number,
-  radius: number,
-  from: number,
-  to: number,
-) {
-  g.clear();
-  g.fillGradientStyle(from, to, from, to, 1);
-  g.fillRoundedRect(-width / 2, -height / 2, width, height, radius);
-}
 
 function paintFlat(g: Phaser.GameObjects.Graphics, width: number, height: number, radius: number, color: number) {
   g.clear();
   g.fillStyle(color, 1);
   g.fillRoundedRect(-width / 2, -height / 2, width, height, radius);
+}
+
+function dimensionsFor(size: ButtonSize) {
+  if (size === 'small') return { width: SMALL_WIDTH, height: SMALL_HEIGHT, radius: SMALL_RADIUS, fontSize: SMALL_FONT_SIZE };
+  if (size === 'compact') {
+    return { width: COMPACT_WIDTH, height: COMPACT_HEIGHT, radius: COMPACT_RADIUS, fontSize: COMPACT_FONT_SIZE };
+  }
+  return { width: NORMAL_WIDTH, height: NORMAL_HEIGHT, radius: NORMAL_RADIUS, fontSize: NORMAL_FONT_SIZE };
 }
 
 export function createButton(
@@ -50,11 +54,7 @@ export function createButton(
   onClick: () => void,
   opts: ButtonOptions = {},
 ): Button {
-  const compact = !!opts.compact;
-  const width = compact ? COMPACT_WIDTH : NORMAL_WIDTH;
-  const height = compact ? COMPACT_HEIGHT : NORMAL_HEIGHT;
-  const radius = compact ? COMPACT_RADIUS : NORMAL_RADIUS;
-  const fontSize = compact ? COMPACT_FONT_SIZE : NORMAL_FONT_SIZE;
+  const { width, height, radius, fontSize } = dimensionsFor(opts.size ?? 'normal');
 
   const bg = scene.add.graphics().setDepth(0).setPosition(x, y);
 
@@ -80,10 +80,10 @@ export function createButton(
       paintFlat(bg, width, height, radius, THEME.buttonDisabledFill);
       text.setColor(THEME.buttonDisabledText);
     } else if (hovering) {
-      paintGradient(bg, width, height, radius, THEME.buttonHoverGradientFrom, THEME.buttonHoverGradientTo);
+      paintFlat(bg, width, height, radius, THEME.buttonHoverFill);
       text.setColor(THEME.text);
     } else {
-      paintGradient(bg, width, height, radius, THEME.buttonGradientFrom, THEME.buttonGradientTo);
+      paintFlat(bg, width, height, radius, THEME.buttonFill);
       text.setColor(THEME.text);
     }
   };
@@ -98,7 +98,7 @@ export function createButton(
     .setInteractive({ useHandCursor: true })
     .on('pointerdown', () => {
       if (disabled) return;
-      paintGradient(bg, width, height, radius, THEME.buttonPressedGradientFrom, THEME.buttonPressedGradientTo);
+      paintFlat(bg, width, height, radius, THEME.buttonPressedFill);
       scene.tweens.add({ targets: [bg, text], scale: 0.96, duration: 70, ease: 'Quad.easeOut' });
       onClick();
     })
@@ -106,7 +106,7 @@ export function createButton(
     .on('pointerupoutside', release)
     .on('pointerover', () => {
       hovering = true;
-      if (!disabled) paintGradient(bg, width, height, radius, THEME.buttonHoverGradientFrom, THEME.buttonHoverGradientTo);
+      if (!disabled) paintFlat(bg, width, height, radius, THEME.buttonHoverFill);
     })
     .on('pointerout', () => {
       hovering = false;

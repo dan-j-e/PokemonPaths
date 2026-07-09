@@ -267,18 +267,32 @@ export class BattleScene extends Phaser.Scene {
             })
             .setOrigin(0.5);
 
-          const yesBtn = createButton(this, 220, 518, 'Yes', () => {
-            yesBtn.destroy();
-            noBtn.destroy();
-            stateAfterBoost.team = applyEvolution(stateAfterBoost.team, offer.memberIndex, offer.to);
-            promptText.setText(`${offer.from} evolved into ${offer.to}!`);
-            createContinueButton(574);
-          });
-          const noBtn = createButton(this, 580, 518, 'No', () => {
-            yesBtn.destroy();
-            noBtn.destroy();
-            createContinueButton(574);
-          });
+          const yesBtn = createButton(
+            this,
+            340,
+            518,
+            'Yes',
+            () => {
+              yesBtn.destroy();
+              noBtn.destroy();
+              stateAfterBoost.team = applyEvolution(stateAfterBoost.team, offer.memberIndex, offer.to);
+              promptText.setText(`${offer.from} evolved into ${offer.to}!`);
+              createContinueButton(568);
+            },
+            { size: 'small' },
+          );
+          const noBtn = createButton(
+            this,
+            460,
+            518,
+            'No',
+            () => {
+              yesBtn.destroy();
+              noBtn.destroy();
+              createContinueButton(568);
+            },
+            { size: 'small' },
+          );
         };
 
         const spinBtn = createButton(this, 400, 438, 'Spin', () => {

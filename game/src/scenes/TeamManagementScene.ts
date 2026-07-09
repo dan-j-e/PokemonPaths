@@ -217,7 +217,7 @@ export class TeamManagementScene extends Phaser.Scene {
             this.runState = { ...this.runState, team };
             this.redrawTeam();
           },
-          { compact: true },
+          { size: 'compact' },
         );
         this.dynamicObjects.push(topBtn);
       }
@@ -257,7 +257,7 @@ export class TeamManagementScene extends Phaser.Scene {
           this.runState = { ...this.runState, team, bench };
           this.redrawTeam();
         },
-        { compact: true },
+        { size: 'compact' },
       );
       this.dynamicObjects.push(swapBtn);
     });
