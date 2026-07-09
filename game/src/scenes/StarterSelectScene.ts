@@ -31,7 +31,7 @@ export class StarterSelectScene extends Phaser.Scene {
       STARTERS.forEach((starter, i) => {
         const x = 200 + i * 200;
 
-        // 96px native PokeAPI sprite doubled for a crisp, sizeable hero image (pixelArt:true keeps it sharp).
+        // 96px native PokeAPI sprite doubled for a sizeable hero image (smooth-scaled, see main.ts).
         this.add.image(x, 240, spriteKey(starter)).setDisplaySize(192, 192);
 
         const btn = createButton(this, x, 370, starter, () => {

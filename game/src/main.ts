@@ -24,7 +24,10 @@ new Phaser.Game({
   width: 800,
   height: 600,
   backgroundColor: '#f6f4fb',
-  pixelArt: true,
+  // Smooth/anti-aliased sprite scaling instead of blocky nearest-neighbor pixel-art scaling —
+  // the small team/opponent icons (26-28px, downscaled from a 96px source) looked noisy under
+  // nearest-neighbor, which only looks good when upscaling, not downscaling this much.
+  antialias: true,
   parent: document.body,
   scene: [
     StarterSelectScene,
