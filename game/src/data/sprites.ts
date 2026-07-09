@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { getSpecies } from './species';
 
-const BASE_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon';
+const BASE_URL = '/sprites/pokemon';
 
 export function spriteUrl(dexNumber: number): string {
   return `${BASE_URL}/${dexNumber}.png`;
