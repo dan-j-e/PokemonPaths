@@ -36,7 +36,7 @@ export class TeamManagementScene extends Phaser.Scene {
   private oddsObjects: Phaser.GameObjects.GameObject[] = [];
   // Scene instances are reused by Phaser across visits (see main.ts's `scene: [...]` registration),
   // so this must be reset in init() — a bare field initializer would only run once, ever.
-  private xAttacksQueued = 0;
+  private xAttackActive = false;
   private battle!: BattleSpec;
   private oppPanelBottom = 0;
 
@@ -46,7 +46,7 @@ export class TeamManagementScene extends Phaser.Scene {
 
   init(data: RunState) {
     this.runState = data;
-    this.xAttacksQueued = 0;
+    this.xAttackActive = false;
   }
 
   create() {
@@ -221,19 +221,21 @@ export class TeamManagementScene extends Phaser.Scene {
 
     const oppPanelBottom = this.oppPanelBottom;
 
-    if (this.runState.items.xAttack > 0) {
-      const useBtn = createButton(
-        this,
-        655,
-        oppPanelBottom + 40,
-        `Use X-Attack (×${this.runState.items.xAttack})`,
-        () => {
-          this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack - 1 };
-          this.runState.pendingBoost += XATTACK_BOOST;
-          this.xAttacksQueued += 1;
-          this.redrawOddsPanel();
-        },
-      );
+    if (this.xAttackActive) {
+      const cancelBtn = createButton(this, 655, oppPanelBottom + 40, 'X-Attack: ON (tap to cancel)', () => {
+        this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack + 1 };
+        this.runState.pendingBoost -= XATTACK_BOOST;
+        this.xAttackActive = false;
+        this.redrawOddsPanel();
+      });
+      this.oddsObjects.push(cancelBtn);
+    } else if (this.runState.items.xAttack > 0) {
+      const useBtn = createButton(this, 655, oppPanelBottom + 40, `Use X-Attack (×${this.runState.items.xAttack})`, () => {
+        this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack - 1 };
+        this.runState.pendingBoost += XATTACK_BOOST;
+        this.xAttackActive = true;
+        this.redrawOddsPanel();
+      });
       this.oddsObjects.push(useBtn);
     } else {
       this.oddsObjects.push(
@@ -250,19 +252,9 @@ export class TeamManagementScene extends Phaser.Scene {
       );
     }
 
-    if (this.xAttacksQueued > 0) {
-      const undoBtn = createButton(this, 655, oppPanelBottom + 80, `Undo (×${this.xAttacksQueued})`, () => {
-        this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack + 1 };
-        this.runState.pendingBoost -= XATTACK_BOOST;
-        this.xAttacksQueued -= 1;
-        this.redrawOddsPanel();
-      });
-      this.oddsObjects.push(undoBtn);
-    }
-
     const odds = computeBattleOdds(this.runState.team, this.battle, this.runState.pendingBoost);
     const winPct = Math.round(odds.winProbability * 100);
-    const oddsPanelTop = oppPanelBottom + 110;
+    const oddsPanelTop = oppPanelBottom + 80;
 
     this.oddsObjects.push(drawPanel(this, 545, oddsPanelTop, 220, 70));
     this.oddsObjects.push(
