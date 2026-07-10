@@ -81,10 +81,10 @@ export function createButton(
       text.setColor(THEME.buttonDisabledText);
     } else if (hovering) {
       paintFlat(bg, width, height, radius, THEME.buttonHoverFill);
-      text.setColor(THEME.text);
+      text.setColor(THEME.buttonText);
     } else {
       paintFlat(bg, width, height, radius, THEME.buttonFill);
-      text.setColor(THEME.text);
+      text.setColor(THEME.buttonText);
     }
   };
 
@@ -131,4 +131,29 @@ export function createButton(
   const button = Object.assign(text, { setDisabled });
   paint();
   return button;
+}
+
+/** A button that disables itself the instant it's clicked, before running `onClick` — the
+ * standard guard against a double-click firing a scene transition (or similar one-shot action)
+ * twice while the first click is still being processed. */
+export function createSelfDisablingButton(
+  scene: Phaser.Scene,
+  x: number,
+  y: number,
+  label: string,
+  onClick: () => void,
+  opts: ButtonOptions = {},
+): Button {
+  const btn = createButton(
+    scene,
+    x,
+    y,
+    label,
+    () => {
+      btn.setDisabled(true);
+      onClick();
+    },
+    opts,
+  );
+  return btn;
 }

@@ -7,7 +7,9 @@ import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
 import { themeFor } from '../data/locationThemes';
 import { drawProgressBar } from '../ui/progressBar';
 import { drawNeoBackground, drawPanel } from '../ui/background';
-import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
+import { drawOddsBar } from '../ui/oddsBar';
+import { drawIconLabelRow } from '../ui/listRow';
+import { THEME, FONT_BODY, FONT_TITLE, FONT_TITLE_WEIGHT } from '../ui/theme';
 import { EVOLUTIONS, EVOLUTION_WIN_THRESHOLD } from '../data/evolutions';
 import { XATTACK_BOOST } from '../data/items';
 import { computeBattleOdds } from '../battle/roulette';
@@ -77,9 +79,11 @@ export class TeamManagementScene extends Phaser.Scene {
       const titleText = this.add
         .text(400, 22, `${locationLabel} vs. ${battle.trainer}`, {
           fontFamily: FONT_TITLE,
+          fontStyle: FONT_TITLE_WEIGHT,
           fontSize: '18px',
           color: THEME.text,
           align: 'center',
+          letterSpacing: 1,
           wordWrap: { width: 760 },
         })
         .setOrigin(0.5);
@@ -111,8 +115,7 @@ export class TeamManagementScene extends Phaser.Scene {
       });
       battle.roster.forEach((species, i) => {
         const y = this.panelsTop + 40 + i * OPPONENT_ROW_HEIGHT;
-        this.add.image(578, y + 12, spriteKey(species)).setDisplaySize(OPPONENT_ICON_SIZE, OPPONENT_ICON_SIZE);
-        this.add.text(602, y, describe(species), {
+        drawIconLabelRow(this, 578, y + 12, spriteKey(species), OPPONENT_ICON_SIZE, 602, y, describe(species), {
           fontFamily: FONT_BODY,
           fontSize: '13px',
           color: THEME.text,
@@ -136,7 +139,7 @@ export class TeamManagementScene extends Phaser.Scene {
 
       this.redrawXAttackButton();
 
-      const continueBtn = createButton(this, 600, 556, 'Continue to Battle', () => {
+      const continueBtn = createButton(this, 600, 552, 'Continue to Battle', () => {
         if (this.runState.mustChangeLeadFrom && this.runState.team[0].species === this.runState.mustChangeLeadFrom) {
           warningText.setText(`You must lead with a Pokemon other than ${this.runState.mustChangeLeadFrom}.`);
           return;
@@ -152,7 +155,7 @@ export class TeamManagementScene extends Phaser.Scene {
     this.xAttackButton = null;
 
     if (this.xAttackActive) {
-      this.xAttackButton = createButton(this, 200, 556, 'X-Attack: ON', () => {
+      this.xAttackButton = createButton(this, 200, 552, 'X-Attack: ON', () => {
         this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack + 1 };
         this.runState.pendingBoost -= XATTACK_BOOST;
         this.xAttackActive = false;
@@ -160,7 +163,7 @@ export class TeamManagementScene extends Phaser.Scene {
         this.redrawOddsPanel();
       });
     } else if (this.runState.items.xAttack > 0) {
-      this.xAttackButton = createButton(this, 200, 556, `Use X-Attack (×${this.runState.items.xAttack})`, () => {
+      this.xAttackButton = createButton(this, 200, 552, `Use X-Attack (×${this.runState.items.xAttack})`, () => {
         this.runState.items = { ...this.runState.items, xAttack: this.runState.items.xAttack - 1 };
         this.runState.pendingBoost += XATTACK_BOOST;
         this.xAttackActive = true;
@@ -168,7 +171,7 @@ export class TeamManagementScene extends Phaser.Scene {
         this.redrawOddsPanel();
       });
     } else {
-      this.xAttackButton = createButton(this, 200, 556, 'X-Attack (none available)', () => {}, { disabled: true });
+      this.xAttackButton = createButton(this, 200, 552, 'X-Attack (none available)', () => {}, { disabled: true });
     }
   }
 
@@ -195,13 +198,17 @@ export class TeamManagementScene extends Phaser.Scene {
 
     this.runState.team.forEach((member, i) => {
       const y = teamRowsStartY + i * ACTIVE_ROW_HEIGHT;
-      const icon = this.add.image(64, y + 10, spriteKey(member.species)).setDisplaySize(ACTIVE_ICON_SIZE, ACTIVE_ICON_SIZE);
-      const row = this.add.text(96, y, `${i + 1}. ${describeMember(member)}`, {
-        fontFamily: FONT_BODY,
-        fontSize: '13px',
-        color: THEME.text,
-        wordWrap: { width: 320 },
-      });
+      const [icon, row] = drawIconLabelRow(
+        this,
+        64,
+        y + 10,
+        spriteKey(member.species),
+        ACTIVE_ICON_SIZE,
+        96,
+        y,
+        `${i + 1}. ${describeMember(member)}`,
+        { fontFamily: FONT_BODY, fontSize: '13px', color: THEME.text, wordWrap: { width: 320 } },
+      );
       this.dynamicObjects.push(icon, row);
 
       if (i > 0) {
@@ -233,13 +240,17 @@ export class TeamManagementScene extends Phaser.Scene {
 
     this.runState.bench.forEach((member, i) => {
       const y = benchRowsStartY + i * BENCH_ROW_HEIGHT;
-      const icon = this.add.image(60, y + 8, spriteKey(member.species)).setDisplaySize(BENCH_ICON_SIZE, BENCH_ICON_SIZE);
-      const row = this.add.text(88, y, describeMember(member), {
-        fontFamily: FONT_BODY,
-        fontSize: '12px',
-        color: THEME.textMuted,
-        wordWrap: { width: 300 },
-      });
+      const [icon, row] = drawIconLabelRow(
+        this,
+        60,
+        y + 8,
+        spriteKey(member.species),
+        BENCH_ICON_SIZE,
+        88,
+        y,
+        describeMember(member),
+        { fontFamily: FONT_BODY, fontSize: '12px', color: THEME.textMuted, wordWrap: { width: 300 } },
+      );
       this.dynamicObjects.push(icon, row);
 
       const swapBtn = createButton(
@@ -286,25 +297,6 @@ export class TeamManagementScene extends Phaser.Scene {
         .setOrigin(0.5),
     );
 
-    const barX = 555;
-    const barY = oddsPanelTop + 36;
-    const barWidth = 200;
-    const barHeight = 20;
-    const oddsBg = this.add.graphics();
-    oddsBg.fillStyle(THEME.danger, 0.35);
-    oddsBg.fillRoundedRect(barX, barY, barWidth, barHeight, 10);
-    const oddsFill = this.add.graphics();
-    oddsFill.fillStyle(THEME.success, 0.85);
-    oddsFill.fillRoundedRect(barX, barY, Math.max(16, (barWidth * winPct) / 100), barHeight, 10);
-    this.oddsObjects.push(oddsBg, oddsFill);
-    this.oddsObjects.push(
-      this.add
-        .text(655, barY + barHeight / 2, `Win ${winPct}% / Lose ${100 - winPct}%`, {
-          fontFamily: FONT_BODY,
-          fontSize: '12px',
-          color: THEME.text,
-        })
-        .setOrigin(0.5),
-    );
+    this.oddsObjects.push(...drawOddsBar(this, 555, oddsPanelTop + 36, 200, 20, winPct, 12));
   }
 }

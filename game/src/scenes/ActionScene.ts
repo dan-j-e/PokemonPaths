@@ -8,12 +8,14 @@ import { ITEM_LABELS, pickRandomItem } from '../data/items';
 import { ensureItemSprites, itemSpriteKey } from '../data/itemSprites';
 import { generateRouteTrainer } from '../data/routeTrainers';
 import { computeBattleOdds, spinBattle } from '../battle/roulette';
-import { applyBattleWin, applyEvolution } from '../data/evolutions';
-import { createButton } from '../ui/button';
+import { applyBattleWin } from '../data/evolutions';
+import { createButton, createSelfDisablingButton } from '../ui/button';
 import type { Button } from '../ui/button';
+import { showEvolvePrompt } from '../ui/evolvePrompt';
+import { drawIconLabelRow } from '../ui/listRow';
 import { drawProgressBar } from '../ui/progressBar';
 import { drawNeoBackground } from '../ui/background';
-import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
+import { THEME, FONT_BODY, FONT_TITLE, FONT_TITLE_WEIGHT } from '../ui/theme';
 import type { ItemType } from '../data/items';
 import type { EvolutionOffer } from '../data/evolutions';
 import type { RunState } from '../data/types';
@@ -51,9 +53,11 @@ export class ActionScene extends Phaser.Scene {
       this.add
         .text(400, 30, segment.name, {
           fontFamily: FONT_TITLE,
+          fontStyle: FONT_TITLE_WEIGHT,
           fontSize: '20px',
           color: THEME.text,
           align: 'center',
+          letterSpacing: 1,
           wordWrap: { width: 700 },
         })
         .setOrigin(0.5);
@@ -65,8 +69,7 @@ export class ActionScene extends Phaser.Scene {
       };
       (Object.keys(itemCounts) as ItemType[]).forEach((item, i) => {
         const x = 20 + i * 90;
-        this.add.image(x, 22, itemSpriteKey(item)).setDisplaySize(24, 24);
-        this.add.text(x + 16, 14, `×${itemCounts[item]}`, {
+        drawIconLabelRow(this, x, 22, itemSpriteKey(item), 24, x + 16, 14, `×${itemCounts[item]}`, {
           fontFamily: FONT_BODY,
           fontSize: '13px',
           color: THEME.textMuted,
@@ -101,59 +104,17 @@ export class ActionScene extends Phaser.Scene {
         this.scene.start('overworld', { ...this.runState, segmentIndex: this.runState.segmentIndex + 1 });
       };
 
-      const createContinueButton = (y: number, onDone: () => void) => {
-        const btn = createButton(this, 400, y, 'Continue', () => {
-          btn.setDisabled(true);
-          onDone();
-        });
-        return btn;
-      };
-
-      const showEvolvePrompt = (offer: EvolutionOffer, onDone: () => void) => {
-        const promptText = this.add
-          .text(400, 480, `${offer.from} wants to evolve into ${offer.to}?`, {
-            fontFamily: FONT_BODY,
-            fontSize: '16px',
-            color: THEME.secondaryHex,
-            align: 'center',
-            wordWrap: { width: 700 },
-          })
-          .setOrigin(0.5);
-
-        const yesBtn = createButton(
-          this,
-          340,
-          520,
-          'Yes',
-          () => {
-            yesBtn.destroy();
-            noBtn.destroy();
-            this.runState.team = applyEvolution(this.runState.team, offer.memberIndex, offer.to);
-            promptText.setText(`${offer.from} evolved into ${offer.to}!`);
-            createContinueButton(568, onDone);
-          },
-          { size: 'small' },
-        );
-        const noBtn = createButton(
-          this,
-          460,
-          520,
-          'No',
-          () => {
-            yesBtn.destroy();
-            noBtn.destroy();
-            createContinueButton(568, onDone);
-          },
-          { size: 'small' },
-        );
-      };
+      const createContinueButton = (y: number, onDone: () => void) => createSelfDisablingButton(this, 400, y, 'Continue', onDone);
 
       const showResultThenContinue = (lines: string[], evolutionOffer?: EvolutionOffer) => {
         resultText.setText(lines.join('\n'));
         if (evolutionOffer) {
-          showEvolvePrompt(evolutionOffer, advance);
+          showEvolvePrompt(this, evolutionOffer, this.runState.team, 480, (newTeam) => {
+            this.runState.team = newTeam;
+            createContinueButton(552, advance);
+          });
         } else {
-          createContinueButton(560, advance);
+          createContinueButton(552, advance);
         }
       };
 

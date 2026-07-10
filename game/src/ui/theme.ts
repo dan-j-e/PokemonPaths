@@ -1,35 +1,44 @@
-// Warm orange-red palette with flat single-color pill buttons.
-// Location backgrounds (locationThemes.ts) keep their own per-city accent, surfaced as a thin
-// identity bar at the top of the screen rather than a full-bleed mood background (see background.ts).
-// All text colors below are contrast-checked (WCAG) against the near-white THEME.background/card white.
+// Dark "nuevo-tokyo" palette — near-black base, sparing orange-red accent (not a dominant fill),
+// light "ink" pill buttons. Location backgrounds (locationThemes.ts) drive a soft radial glow per
+// segment (see ui/background.ts's drawRadialGlow) instead of a flat fill.
+// All contrast ratios below are WCAG relative-luminance, checked against THEME.background unless noted.
 
 export const FONT_BODY = '"Nunito", sans-serif';
 export const FONT_TITLE = '"Nunito", sans-serif';
+// Titles use this heavier weight (Nunito 800, already loaded) + letter-spacing to read as a
+// distinct display style instead of just being body text at a bigger size.
+export const FONT_TITLE_WEIGHT = '800';
 
 export const THEME = {
-  background: 0xf6f4fb,
-  text: '#2e2b3d',
-  textMuted: '#726c8d',
+  background: 0x141318,
+  surface: 0x1c1b22, // panel/card fill, progress-bar track fill
+  surfaceHex: '#1c1b22',
 
-  primary: 0xc7361f, // deep rust-orange — ~4.8:1 on white
-  primaryHex: '#c7361f',
-  secondary: 0x23243a, // dark navy — ~13.9:1 on white
-  secondaryHex: '#23243a',
-  tertiary: 0x9c5a1e, // amber-brown — ~4.9:1 on white
-  tertiaryHex: '#9c5a1e',
+  text: '#f3f1ec', // 16.4:1
+  textMuted: '#a9a6ad', // 7.57:1
 
-  success: 0x177a46, // emerald — ~4.9:1 on white
-  successHex: '#177a46',
-  danger: 0xb91c1c, // deep red, distinct from the primary rust-orange — ~5.9:1 on white
-  dangerHex: '#b91c1c',
+  ink: 0xf3f1ec, // numeric form of `text` — default button fill, progress-bar "lit" neutral
+  inkHex: '#f3f1ec',
 
-  // Flat single-color pill button fills (one coral-orange, tone-shifted per state — no gradient).
-  // Dark THEME.text stays legible across all three: default 5.89:1, hover 6.48:1, pressed 4.70:1.
-  buttonFill: 0xff8a50,
-  buttonHoverFill: 0xff985e,
-  buttonPressedFill: 0xeb763c,
+  primary: 0xff5a36, // 5.96:1 — sparing accent (progress-bar milestones), not the default button color
+  primaryHex: '#ff5a36',
+  secondary: 0xf3f1ec, // reuses `ink` — light neutral for emphasis text
+  secondaryHex: '#f3f1ec',
+  tertiary: 0x827e8c, // 4.67:1 — muted cool grey for de-emphasized labels/borders
+  tertiaryHex: '#827e8c',
 
-  buttonDisabledFill: 0xf0eef6,
-  buttonDisabledFillHex: '#f0eef6',
-  buttonDisabledText: '#b9b5cc',
+  success: 0x3ddc84, // 10.36:1
+  successHex: '#3ddc84',
+  danger: 0xff4d6d, // 5.75:1 — hue-distinct from primary orange
+  dangerHex: '#ff4d6d',
+
+  // Light "ink" pill buttons (inverts the old light-theme button logic — pops against the dark
+  // ground automatically). buttonText is dark since the pill itself is now light.
+  buttonFill: 0xf3f1ec,
+  buttonHoverFill: 0xffffff,
+  buttonPressedFill: 0xd9d6cf,
+  buttonText: '#18161c', // 15.9:1 on buttonFill
+
+  buttonDisabledFill: 0x2a2930, // recedes into the dark ground
+  buttonDisabledText: '#6b6870',
 } as const;

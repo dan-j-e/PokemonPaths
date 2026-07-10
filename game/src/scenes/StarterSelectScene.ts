@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { ensureSpeciesSprites, spriteKey } from '../data/sprites';
 import { emptyInventory } from '../data/items';
 import { drawNeoBackground } from '../ui/background';
-import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
+import { THEME, FONT_BODY, FONT_TITLE, FONT_TITLE_WEIGHT } from '../ui/theme';
+import { LOCATION_THEMES } from '../data/locationThemes';
 
 const STARTERS = ['Turtwig', 'Chimchar', 'Piplup'];
 
@@ -12,14 +13,16 @@ export class StarterSelectScene extends Phaser.Scene {
   }
 
   create() {
-    drawNeoBackground(this, 0x1f3d2b);
+    drawNeoBackground(this, LOCATION_THEMES['twinleaf-town']);
 
     this.add
       .text(400, 60, 'Twinleaf Town\nChoose your starter', {
         fontFamily: FONT_TITLE,
+        fontStyle: FONT_TITLE_WEIGHT,
         fontSize: '28px',
         color: THEME.text,
         align: 'center',
+        letterSpacing: 1,
       })
       .setOrigin(0.5);
 

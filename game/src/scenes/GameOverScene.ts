@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import { createButton } from '../ui/button';
+import { createSelfDisablingButton } from '../ui/button';
 import { drawNeoBackground } from '../ui/background';
-import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
+import { THEME, FONT_BODY, FONT_TITLE, FONT_TITLE_WEIGHT } from '../ui/theme';
 
 interface GameOverData {
   location: string;
@@ -20,14 +20,16 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   create() {
-    drawNeoBackground(this, 0x140a0a);
+    drawNeoBackground(this, THEME.danger);
 
     this.add
       .text(400, 200, 'RUN OVER', {
         fontFamily: FONT_TITLE,
+        fontStyle: FONT_TITLE_WEIGHT,
         fontSize: '40px',
         color: THEME.dangerHex,
         align: 'center',
+        letterSpacing: 2,
       })
       .setOrigin(0.5);
 
@@ -41,8 +43,7 @@ export class GameOverScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    const restartBtn = createButton(this, 400, 400, 'Restart', () => {
-      restartBtn.setDisabled(true);
+    createSelfDisablingButton(this, 400, 400, 'Restart', () => {
       this.scene.start('starter-select');
     });
   }

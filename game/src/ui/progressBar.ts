@@ -2,57 +2,80 @@ import Phaser from 'phaser';
 import { SEGMENTS } from '../data/segments';
 import { THEME, FONT_BODY } from './theme';
 
-const GYM_SEGMENT_INDICES = SEGMENTS.reduce<number[]>((acc, seg, i) => {
+const GYM_INDICES = new Set(SEGMENTS.reduce<number[]>((acc, seg, i) => {
   if (seg.isGym) acc.push(i);
   return acc;
-}, []);
+}, []));
 
 const LEAGUE_INDEX = SEGMENTS.findIndex((s) => s.id === 'pokemon-league');
 
-const TRACK_X = 780;
-const TRACK_TOP_Y = 30;
-const TRACK_BOTTOM_Y = 570;
+const BAR_MARGIN_X = 40;
+const BAR_Y = 588;
+const BAR_HEIGHT = 20;
+const USABLE_WIDTH = 800 - BAR_MARGIN_X * 2;
+const STOP_SPACING = USABLE_WIDTH / (SEGMENTS.length - 1);
+const SQUARE_SIZE = 10;
+const BADGE_SIZE = 14;
+const STAR_FONT_SIZE = 16;
+const UNLIT_COLOR = 0x3a3742;
 
-/** Vertical badge-case track on the right edge: gym pips light up as they're passed, a Champion
- * star sits at the top as the run's ultimate goal. Labeled so it reads as a deliberate UI element
- * rather than stray lines/glyphs. */
-export function drawProgressBar(scene: Phaser.Scene, segmentIndex: number): void {
-  const gymCount = GYM_SEGMENT_INDICES.length;
-  const spacing = (TRACK_BOTTOM_Y - TRACK_TOP_Y) / (gymCount + 1);
+function stopX(i: number): number {
+  return BAR_MARGIN_X + i * STOP_SPACING;
+}
 
-  scene.add.rectangle(TRACK_X, TRACK_TOP_Y, 4, TRACK_BOTTOM_Y - TRACK_TOP_Y, THEME.tertiary, 0.7).setOrigin(0.5, 0);
+function isLit(i: number, segmentIndex: number): boolean {
+  return i === LEAGUE_INDEX ? segmentIndex >= LEAGUE_INDEX : segmentIndex > i;
+}
 
-  const championLit = segmentIndex >= LEAGUE_INDEX;
+function drawSquare(scene: Phaser.Scene, x: number, y: number, color: number): void {
+  const g = scene.add.graphics();
+  g.fillStyle(color, 1);
+  g.fillRoundedRect(x - SQUARE_SIZE / 2, y - SQUARE_SIZE / 2, SQUARE_SIZE, SQUARE_SIZE, 2);
+}
+
+function drawBadge(scene: Phaser.Scene, x: number, y: number, color: number): void {
+  const half = BADGE_SIZE / 2;
+  const g = scene.add.graphics();
+  g.fillStyle(color, 1);
+  g.beginPath();
+  g.moveTo(x, y - half);
+  g.lineTo(x + half, y);
+  g.lineTo(x, y + half);
+  g.lineTo(x - half, y);
+  g.closePath();
+  g.fillPath();
+  g.lineStyle(1, THEME.ink, 0.5);
+  g.strokePath();
+}
+
+function drawStar(scene: Phaser.Scene, x: number, y: number, color: number): void {
   scene.add
-    .text(TRACK_X, TRACK_TOP_Y, '★', {
-      fontFamily: FONT_BODY,
-      fontSize: '22px',
-      color: championLit ? THEME.primaryHex : '#C7C2DC',
-    })
+    .text(x, y, '★', { fontFamily: FONT_BODY, fontSize: `${STAR_FONT_SIZE}px`, color: `#${color.toString(16).padStart(6, '0')}` })
     .setOrigin(0.5);
-  scene.add
-    .text(798, TRACK_TOP_Y + 22, 'Champion', {
-      fontFamily: FONT_BODY,
-      fontSize: '10px',
-      color: THEME.textMuted,
-    })
-    .setOrigin(1, 0);
+}
 
-  GYM_SEGMENT_INDICES.forEach((gymIndex, i) => {
-    const positionFromTop = gymCount - i;
-    const y = TRACK_TOP_Y + positionFromTop * spacing;
-    const lit = segmentIndex > gymIndex;
-    scene.add
-      .circle(TRACK_X, y, 9, lit ? THEME.secondary : 0xe3e0ee)
-      .setStrokeStyle(2, lit ? THEME.secondary : 0xc7c2dc);
+/** Horizontal pill at the bottom of the canvas showing every segment as a small marker — a plain
+ * square for ordinary stops, a diamond "badge" for the 8 gyms, a star for the final stop (Elite
+ * Four + Champion, combined into the 'pokemon-league' segment). Unlit (not yet reached) stops are
+ * a flat muted grey regardless of shape; lit gym badges and the final star turn the accent color
+ * (reserving it for the run's real milestones), lit plain stops turn the light "ink" neutral. */
+export function drawProgressBar(scene: Phaser.Scene, segmentIndex: number): void {
+  const track = scene.add.graphics().setDepth(-1);
+  track.fillStyle(THEME.surface, 0.85);
+  track.fillRoundedRect(BAR_MARGIN_X, BAR_Y - BAR_HEIGHT / 2, USABLE_WIDTH, BAR_HEIGHT, BAR_HEIGHT / 2);
+  track.lineStyle(1, THEME.ink, 0.12);
+  track.strokeRoundedRect(BAR_MARGIN_X, BAR_Y - BAR_HEIGHT / 2, USABLE_WIDTH, BAR_HEIGHT, BAR_HEIGHT / 2);
+
+  SEGMENTS.forEach((_, i) => {
+    const x = stopX(i);
+    const lit = isLit(i, segmentIndex);
+
+    if (i === LEAGUE_INDEX) {
+      drawStar(scene, x, BAR_Y, lit ? THEME.primary : UNLIT_COLOR);
+    } else if (GYM_INDICES.has(i)) {
+      drawBadge(scene, x, BAR_Y, lit ? THEME.primary : UNLIT_COLOR);
+    } else {
+      drawSquare(scene, x, BAR_Y, lit ? THEME.ink : UNLIT_COLOR);
+    }
   });
-
-  const bottomPipY = TRACK_TOP_Y + gymCount * spacing;
-  scene.add
-    .text(798, bottomPipY + 18, 'Badges', {
-      fontFamily: FONT_BODY,
-      fontSize: '10px',
-      color: THEME.textMuted,
-    })
-    .setOrigin(1, 0);
 }

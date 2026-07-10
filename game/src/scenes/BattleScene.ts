@@ -1,15 +1,16 @@
 import Phaser from 'phaser';
 import { SEGMENTS } from '../data/segments';
 import { computeBattleOdds, spinBattle } from '../battle/roulette';
-import { createButton } from '../ui/button';
+import { createButton, createSelfDisablingButton } from '../ui/button';
 import type { Button } from '../ui/button';
 import { ensureSpeciesSprites, ensureBackSpeciesSprites, spriteKey, backSpriteKey } from '../data/sprites';
 import { themeFor } from '../data/locationThemes';
 import { drawProgressBar } from '../ui/progressBar';
 import { drawNeoBackground, drawPanel } from '../ui/background';
-import { THEME, FONT_BODY, FONT_TITLE } from '../ui/theme';
-import { applyBattleWin, applyEvolution } from '../data/evolutions';
-import type { EvolutionOffer } from '../data/evolutions';
+import { drawOddsBar } from '../ui/oddsBar';
+import { showEvolvePrompt } from '../ui/evolvePrompt';
+import { THEME, FONT_BODY, FONT_TITLE, FONT_TITLE_WEIGHT } from '../ui/theme';
+import { applyBattleWin } from '../data/evolutions';
 import type { RunState } from '../data/types';
 
 // Non-lead roster preview: lead is the big front sprite above; the rest are arranged in a
@@ -54,15 +55,16 @@ export class BattleScene extends Phaser.Scene {
         this.add
           .text(400, 22, `${locationLabel}\nvs. ${battle.trainer}`, {
             fontFamily: FONT_TITLE,
+            fontStyle: FONT_TITLE_WEIGHT,
             fontSize: '15px',
             color: THEME.text,
             align: 'center',
+            letterSpacing: 1,
             wordWrap: { width: 700 },
           })
           .setOrigin(0.5);
 
         // Player: back sprite, large and close, lower-left — "on the ground" DS-style framing.
-        const playerShadow = this.add.ellipse(180, 258, 150, 24, 0x2e2b3d, 0.14).setDepth(-2);
         const playerGlow = this.add.circle(180, 195, 88, THEME.secondary, 0.1).setDepth(-1);
         const playerImage = this.add.image(180, 195, backSpriteKey(playerLead)).setDisplaySize(140, 140);
 
@@ -116,13 +118,6 @@ export class BattleScene extends Phaser.Scene {
           delay: 100,
         });
         this.tweens.add({
-          targets: playerShadow,
-          alpha: { from: 0, to: playerShadow.alpha },
-          duration: 500,
-          ease: 'Sine.easeOut',
-          delay: 100,
-        });
-        this.tweens.add({
           targets: opponentImage,
           x: { from: 676, to: 616 },
           alpha: { from: 0, to: 1 },
@@ -162,23 +157,7 @@ export class BattleScene extends Phaser.Scene {
           })
           .setOrigin(0.5);
 
-        const barWidth = 400;
-        const barX = 200;
-        const barY = 328;
-        const barHeight = 24;
-        const oddsBg = this.add.graphics();
-        oddsBg.fillStyle(THEME.danger, 0.35);
-        oddsBg.fillRoundedRect(barX, barY, barWidth, barHeight, 12);
-        const oddsFill = this.add.graphics();
-        oddsFill.fillStyle(THEME.success, 0.85);
-        oddsFill.fillRoundedRect(barX, barY, Math.max(24, (barWidth * winPct) / 100), barHeight, 12);
-        this.add
-          .text(400, barY + barHeight / 2, `Win ${winPct}% / Lose ${100 - winPct}%`, {
-            fontFamily: FONT_BODY,
-            fontSize: '16px',
-            color: THEME.text,
-          })
-          .setOrigin(0.5);
+        drawOddsBar(this, 200, 328, 400, 24, winPct);
 
         const resultText = this.add
           .text(400, 400, '', {
@@ -209,13 +188,7 @@ export class BattleScene extends Phaser.Scene {
           }
         };
 
-        const createContinueButton = (y: number) => {
-          const btn = createButton(this, 400, y, 'Continue', () => {
-            btn.setDisabled(true);
-            advanceToNext();
-          });
-          return btn;
-        };
+        const createContinueButton = (y: number) => createSelfDisablingButton(this, 400, y, 'Continue', advanceToNext);
 
         const showLossOptions = () => {
           resultText.setText('You lost...');
@@ -231,7 +204,7 @@ export class BattleScene extends Phaser.Scene {
                 this.scene.start('battle', { ...stateAfterBoost, items });
               }),
             );
-            y += 52;
+            y += 46;
           }
 
           // Only offer a lead change if one is actually possible — otherwise this would
@@ -245,7 +218,7 @@ export class BattleScene extends Phaser.Scene {
                 this.scene.start('team-management', { ...stateAfterBoost, items, mustChangeLeadFrom: playerLead });
               }),
             );
-            y += 52;
+            y += 46;
           }
 
           lossButtons.push(
@@ -253,45 +226,6 @@ export class BattleScene extends Phaser.Scene {
               disableLossButtons();
               this.scene.start('game-over', { location: segment.name, trainer: battle.trainer });
             }),
-          );
-        };
-
-        const showEvolvePrompt = (offer: EvolutionOffer) => {
-          const promptText = this.add
-            .text(400, 478, `${offer.from} wants to evolve into ${offer.to}?`, {
-              fontFamily: FONT_BODY,
-              fontSize: '16px',
-              color: THEME.secondaryHex,
-              align: 'center',
-              wordWrap: { width: 700 },
-            })
-            .setOrigin(0.5);
-
-          const yesBtn = createButton(
-            this,
-            340,
-            518,
-            'Yes',
-            () => {
-              yesBtn.destroy();
-              noBtn.destroy();
-              stateAfterBoost.team = applyEvolution(stateAfterBoost.team, offer.memberIndex, offer.to);
-              promptText.setText(`${offer.from} evolved into ${offer.to}!`);
-              createContinueButton(568);
-            },
-            { size: 'small' },
-          );
-          const noBtn = createButton(
-            this,
-            460,
-            518,
-            'No',
-            () => {
-              yesBtn.destroy();
-              noBtn.destroy();
-              createContinueButton(568);
-            },
-            { size: 'small' },
           );
         };
 
@@ -329,13 +263,16 @@ export class BattleScene extends Phaser.Scene {
             });
 
             if (result.evolutionOffer) {
-              showEvolvePrompt(result.evolutionOffer);
+              showEvolvePrompt(this, result.evolutionOffer, stateAfterBoost.team, 478, (newTeam) => {
+                stateAfterBoost.team = newTeam;
+                createContinueButton(552);
+              });
             } else {
               createContinueButton(478);
             }
           } else if (battle.runEnding) {
             this.tweens.add({
-              targets: [playerImage, playerGlow, playerShadow],
+              targets: [playerImage, playerGlow],
               y: '+=20',
               alpha: 0.3,
               duration: 400,
@@ -344,7 +281,7 @@ export class BattleScene extends Phaser.Scene {
             showLossOptions();
           } else {
             this.tweens.add({
-              targets: [playerImage, playerGlow, playerShadow],
+              targets: [playerImage, playerGlow],
               y: '+=20',
               alpha: 0.3,
               duration: 400,
