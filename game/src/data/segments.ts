@@ -34,9 +34,10 @@ export const SEGMENTS: Segment[] = [
     id: 'eterna-city-gym2',
     name: 'Eterna City — Gym 2',
     kind: 'battle',
-    battles: [T.GYM_GARDENIA, T.JUPITER_1],
+    battles: [T.GYM_GARDENIA],
     isGym: true,
   },
+  { id: 'eterna-city-jupiter', name: 'Eterna City — Team Galactic', kind: 'battle', battles: [T.JUPITER_1] },
   {
     id: 'mt-coronet-crossing',
     name: 'Mt. Coronet Crossing',

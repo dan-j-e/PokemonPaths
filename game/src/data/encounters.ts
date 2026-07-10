@@ -50,6 +50,7 @@ export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
     { species: 'Kadabra', weight: 15 },
     { species: 'Kricketune', weight: 37 },
     { species: 'Bonsly', weight: 8 },
+    { species: 'Cranidos', weight: 8 },
   ],
   'hearthome-outskirts': [
     { species: 'Ponyta', weight: 100 },
@@ -74,6 +75,7 @@ export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
     { species: 'Buizel', weight: 30 },
     { species: 'Floatzel', weight: 10 },
     { species: 'Shellos', weight: 45 },
+    { species: 'Croagunk', weight: 15 },
   ],
   'route-210-north': [
     { species: 'Psyduck', weight: 20 },
@@ -90,6 +92,7 @@ export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
     { species: 'Floatzel', weight: 35 },
     { species: 'Shellos', weight: 20 },
     { species: 'Gastrodon', weight: 20 },
+    { species: 'Barboach', weight: 20 },
   ],
   'coronet-to-snowpoint': [
     { species: 'Zubat', weight: 35 },
@@ -120,6 +123,7 @@ export const ENCOUNTER_TABLES: Record<string, EncounterEntry[]> = {
   ],
   'route-223-victory-road': [
     { species: 'Tentacruel', weight: 60 },
+    { species: 'Tentacool', weight: 40 },
     { species: 'Pelipper', weight: 30 },
     { species: 'Mantyke', weight: 10 },
     { species: 'Golbat', weight: 60 },

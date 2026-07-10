@@ -9,6 +9,7 @@ import { ensureItemSprites, itemSpriteKey } from '../data/itemSprites';
 import { generateRouteTrainer } from '../data/routeTrainers';
 import { computeBattleOdds, spinBattle } from '../battle/roulette';
 import { applyBattleWin } from '../data/evolutions';
+import { nextMemberId } from '../data/memberId';
 import { createButton, createSelfDisablingButton } from '../ui/button';
 import type { Button } from '../ui/button';
 import { showEvolvePrompt } from '../ui/evolvePrompt';
@@ -92,10 +93,11 @@ export class ActionScene extends Phaser.Scene {
         if (this.runState.team.length + this.runState.bench.length >= MAX_TOTAL_ROSTER) {
           return false;
         }
+        const member = { species, id: nextMemberId() };
         if (this.runState.team.length < MAX_ACTIVE_TEAM) {
-          this.runState.team = [...this.runState.team, { species }];
+          this.runState.team = [...this.runState.team, member];
         } else {
-          this.runState.bench = [...this.runState.bench, { species }];
+          this.runState.bench = [...this.runState.bench, member];
         }
         return true;
       };
@@ -200,7 +202,7 @@ export class ActionScene extends Phaser.Scene {
         }
 
         const battle = generateRouteTrainer(segment.id);
-        this.scene.start('team-management', { ...this.runState, adHocBattle: battle, battleSubIndex: 0 });
+        this.scene.start('team-management', { ...this.runState, adHocBattle: battle, battleSubIndex: 0, faintedIds: undefined });
       };
 
       pool.forEach((action, i) => {

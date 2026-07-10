@@ -42,7 +42,7 @@ export class OverworldScene extends Phaser.Scene {
 
     createSelfDisablingButton(this, 400, 350, 'Continue', () => {
       if (segment.kind === 'battle') {
-        this.scene.start('team-management', { ...this.runState, battleSubIndex: 0 });
+        this.scene.start('team-management', { ...this.runState, battleSubIndex: 0, faintedIds: undefined });
       } else {
         this.scene.start('action', this.runState);
       }

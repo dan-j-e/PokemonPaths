@@ -170,6 +170,7 @@ export class BattleScene extends Phaser.Scene {
           .setOrigin(0.5);
 
         const advanceToNext = () => {
+          stateAfterBoost.faintedIds = undefined;
           if (stateAfterBoost.adHocBattle) {
             this.scene.start('overworld', {
               ...stateAfterBoost,
@@ -196,6 +197,9 @@ export class BattleScene extends Phaser.Scene {
           const lossButtons: Button[] = [];
           const disableLossButtons = () => lossButtons.forEach((b) => b.setDisabled(true));
 
+          const leadId = stateAfterBoost.team[0].id;
+          const nextFaintedIds = [...(stateAfterBoost.faintedIds ?? []), leadId];
+
           if (stateAfterBoost.items.revive > 0) {
             lossButtons.push(
               createButton(this, 400, y, `Use Revive (×${stateAfterBoost.items.revive})`, () => {
@@ -209,13 +213,15 @@ export class BattleScene extends Phaser.Scene {
 
           // Only offer a lead change if one is actually possible — otherwise this would
           // demand a lead change TeamManagementScene has no way to satisfy (a soft-lock).
-          const canChangeLead = stateAfterBoost.team.length > 1 || stateAfterBoost.bench.length > 0;
+          const canChangeLead = [...stateAfterBoost.team, ...stateAfterBoost.bench].some(
+            (m) => !nextFaintedIds.includes(m.id),
+          );
           if (stateAfterBoost.items.potion > 0 && canChangeLead) {
             lossButtons.push(
               createButton(this, 400, y, `Use Potion (×${stateAfterBoost.items.potion})`, () => {
                 disableLossButtons();
                 const items = { ...stateAfterBoost.items, potion: stateAfterBoost.items.potion - 1 };
-                this.scene.start('team-management', { ...stateAfterBoost, items, mustChangeLeadFrom: playerLead });
+                this.scene.start('team-management', { ...stateAfterBoost, items, faintedIds: nextFaintedIds });
               }),
             );
             y += 46;

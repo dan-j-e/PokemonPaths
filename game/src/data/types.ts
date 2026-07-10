@@ -21,6 +21,7 @@ export interface Segment {
 }
 
 export interface TeamMember {
+  id: string;
   species: string;
   /** Wins as active lead, toward EVOLUTION_WIN_THRESHOLD. Fractional when boosted by EXP Share. */
   wins?: number;
@@ -35,8 +36,9 @@ export interface RunState {
   items: Record<ItemType, number>;
   /** X-Attack's queued win-odds bonus for the very next battle only. */
   pendingBoost: number;
-  /** Set after a Potion retry: the lead species that must NOT still be leading when continuing. */
-  mustChangeLeadFrom?: string;
+  /** Mon ids that have fainted during the current battle attempt — a fainted mon cannot lead a
+   * retry until healed by a Revive. Reset whenever a genuinely new battle attempt begins. */
+  faintedIds?: string[];
   /** A one-off route encounter battle, not part of any segment's static battle list. */
   adHocBattle?: BattleSpec;
   /** Granted after winning Gym 4: every win also gives non-lead active team members partial win progress. */

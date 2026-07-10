@@ -12,6 +12,7 @@ export const LOCATION_THEMES: Record<string, number> = {
   'valley-windworks': 0x7b858f,
   'route-205-eterna-forest': 0x737f77,
   'eterna-city-gym2': 0x778b77,
+  'eterna-city-jupiter': 0x778b77,
   'mt-coronet-crossing': 0x7f7d84,
   'hearthome-outskirts': 0x8b7994,
   'veilstone-city-gym3': 0x808082,

@@ -17,7 +17,7 @@ const STOP_SPACING = USABLE_WIDTH / (SEGMENTS.length - 1);
 const SQUARE_SIZE = 10;
 const BADGE_SIZE = 14;
 const STAR_FONT_SIZE = 16;
-const UNLIT_COLOR = 0x3a3742;
+export const UNLIT_COLOR = 0x3a3742;
 
 function stopX(i: number): number {
   return BAR_MARGIN_X + i * STOP_SPACING;

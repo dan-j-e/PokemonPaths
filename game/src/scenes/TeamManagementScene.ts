@@ -9,6 +9,7 @@ import { drawProgressBar } from '../ui/progressBar';
 import { drawNeoBackground, drawPanel } from '../ui/background';
 import { drawOddsBar } from '../ui/oddsBar';
 import { drawIconLabelRow } from '../ui/listRow';
+import { drawEvolutionProgress } from '../ui/evolutionProgress';
 import { THEME, FONT_BODY, FONT_TITLE, FONT_TITLE_WEIGHT } from '../ui/theme';
 import { EVOLUTIONS, EVOLUTION_WIN_THRESHOLD } from '../data/evolutions';
 import { XATTACK_BOOST } from '../data/items';
@@ -30,13 +31,8 @@ function describe(species: string): string {
   return `${species} (${s.type1}${s.type2 ? '/' + s.type2 : ''})`;
 }
 
-function describeMember(member: TeamMember): string {
-  const base = describe(member.species);
-  const wins = member.wins ?? 0;
-  if (wins > 0 && EVOLUTIONS[member.species]) {
-    return `${base} — ${wins}/${EVOLUTION_WIN_THRESHOLD} wins`;
-  }
-  return base;
+function hasEvolutionProgress(member: TeamMember): boolean {
+  return (member.wins ?? 0) > 0 && !!EVOLUTIONS[member.species];
 }
 
 export class TeamManagementScene extends Phaser.Scene {
@@ -90,9 +86,9 @@ export class TeamManagementScene extends Phaser.Scene {
 
       let headerBottom = titleText.y + titleText.height / 2;
 
-      if (this.runState.mustChangeLeadFrom) {
+      if (this.runState.faintedIds?.length) {
         const infoText = this.add
-          .text(400, headerBottom + 12, `Potion used — reorder so ${this.runState.mustChangeLeadFrom} is no longer leading.`, {
+          .text(400, headerBottom + 12, "A Pokemon has fainted — reorder your team so it isn't leading before continuing.", {
             fontFamily: FONT_BODY,
             fontSize: '12px',
             color: THEME.primaryHex,
@@ -140,12 +136,12 @@ export class TeamManagementScene extends Phaser.Scene {
       this.redrawXAttackButton();
 
       const continueBtn = createButton(this, 600, 552, 'Continue to Battle', () => {
-        if (this.runState.mustChangeLeadFrom && this.runState.team[0].species === this.runState.mustChangeLeadFrom) {
-          warningText.setText(`You must lead with a Pokemon other than ${this.runState.mustChangeLeadFrom}.`);
+        if (this.runState.faintedIds?.includes(this.runState.team[0].id)) {
+          warningText.setText(`${this.runState.team[0].species} has fainted and can't lead. Reorder your team first.`);
           return;
         }
         continueBtn.setDisabled(true);
-        this.scene.start('battle', { ...this.runState, mustChangeLeadFrom: undefined });
+        this.scene.start('battle', { ...this.runState });
       });
     });
   }
@@ -206,10 +202,15 @@ export class TeamManagementScene extends Phaser.Scene {
         ACTIVE_ICON_SIZE,
         96,
         y,
-        `${i + 1}. ${describeMember(member)}`,
-        { fontFamily: FONT_BODY, fontSize: '13px', color: THEME.text, wordWrap: { width: 320 } },
+        `${i + 1}. ${describe(member.species)}`,
+        { fontFamily: FONT_BODY, fontSize: '13px', color: THEME.text, wordWrap: { width: 230 } },
       );
       this.dynamicObjects.push(icon, row);
+
+      if (hasEvolutionProgress(member)) {
+        const bar = drawEvolutionProgress(this, 340, y + 6, 80, 8, Math.min(1, (member.wins ?? 0) / EVOLUTION_WIN_THRESHOLD));
+        this.dynamicObjects.push(bar);
+      }
 
       if (i > 0) {
         const topBtn = createButton(
@@ -248,10 +249,15 @@ export class TeamManagementScene extends Phaser.Scene {
         BENCH_ICON_SIZE,
         88,
         y,
-        describeMember(member),
-        { fontFamily: FONT_BODY, fontSize: '12px', color: THEME.textMuted, wordWrap: { width: 300 } },
+        describe(member.species),
+        { fontFamily: FONT_BODY, fontSize: '12px', color: THEME.textMuted, wordWrap: { width: 190 } },
       );
       this.dynamicObjects.push(icon, row);
+
+      if (hasEvolutionProgress(member)) {
+        const bar = drawEvolutionProgress(this, 300, y + 4, 80, 6, Math.min(1, (member.wins ?? 0) / EVOLUTION_WIN_THRESHOLD));
+        this.dynamicObjects.push(bar);
+      }
 
       const swapBtn = createButton(
         this,

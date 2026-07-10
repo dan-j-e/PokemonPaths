@@ -44,6 +44,20 @@ export const EVOLUTIONS: Record<string, string | string[]> = {
   Snover: 'Abomasnow',
   Buneary: 'Lopunny',
   Onix: 'Steelix',
+  Kricketot: 'Kricketune',
+  Buizel: 'Floatzel',
+  Shellos: 'Gastrodon',
+  Hoothoot: 'Noctowl',
+  Barboach: 'Whiscash',
+  Tentacool: 'Tentacruel',
+  Stunky: 'Skuntank',
+  Bonsly: 'Sudowoodo',
+  Croagunk: 'Toxicroak',
+  Cleffa: 'Clefairy',
+  Clefairy: 'Clefable',
+  Mantyke: 'Mantine',
+  Chansey: 'Blissey',
+  Cranidos: 'Rampardos',
 };
 
 export function pickEvolutionTarget(species: string): string | undefined {
@@ -86,5 +100,5 @@ export function applyBattleWin(runState: RunState): WinResult {
 }
 
 export function applyEvolution(team: TeamMember[], memberIndex: number, newSpecies: string): TeamMember[] {
-  return team.map((member, i) => (i === memberIndex ? { species: newSpecies, wins: 0 } : member));
+  return team.map((member, i) => (i === memberIndex ? { ...member, species: newSpecies, wins: 0 } : member));
 }
