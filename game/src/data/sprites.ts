@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 import { getSpecies } from './species';
 
-const BASE_URL = '/sprites/pokemon';
-const BACK_BASE_URL = '/sprites/pokemon-back';
+const BASE_URL = `${import.meta.env.BASE_URL}sprites/pokemon`;
+const BACK_BASE_URL = `${import.meta.env.BASE_URL}sprites/pokemon-back`;
 
 export function spriteUrl(dexNumber: number): string {
   return `${BASE_URL}/${dexNumber}.png`;
